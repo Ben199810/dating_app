@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>簡易聊天室</title>
+  <style>
+    body { font-family: sans-serif; margin: 2em; }
+    #messages { border: 1px solid #ccc; height: 200px; overflow-y: scroll; padding: 1em; margin-bottom: 1em; }
+    #user, #content { width: 120px; }
+    #send { margin-left: 1em; }
+  </style>
+</head>
+<body>
+  <h2>聊天室</h2>
+  <div id="messages"></div>
+  <input id="user" placeholder="你的名字">
+  <input id="content" placeholder="輸入訊息">
+  <button id="send">送出</button>
+
+  <script>
+    function fetchMessages() {
+      fetch('/messages')
+        .then(res => res.json())
+        .then(data => {
+          const box = document.getElementById('messages');
+          box.innerHTML = data.map(m => `<b>${m.user}</b>: ${m.content}`).join('<br>');
+          box.scrollTop = box.scrollHeight;
+        });
+    }
+
+    document.getElementById('send').onclick = function() {
+      const user = document.getElementById('user').value.trim();
+      const content = document.getElementById('content').value.trim();
+      if (!user || !content) return;
+      fetch('/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user, content })
+      }).then(() => {
+        document.getElementById('content').value = '';
+        fetchMessages();
+      });
+    };
+
+    setInterval(fetchMessages, 1500);
+    fetchMessages();
+  </script>
+</body>
+</html>
