@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>WebSocket 聊天室</title>
+  <style>
+    body { font-family: sans-serif; margin: 2em; }
+    #messages { border: 1px solid #ccc; height: 200px; overflow-y: scroll; padding: 1em; margin-bottom: 1em; }
+    #user, #content { width: 120px; }
+    #send { margin-left: 1em; }
+  </style>
+</head>
+<body>
+  <h2>WebSocket 聊天室</h2>
+  <div id="messages"></div>
+  <input id="user" placeholder="你的名字">
+  <input id="content" placeholder="輸入訊息">
+  <button id="send">送出</button>
+
+  <script>
+    let ws;
+    let user = '';
+    function connectWS() {
+      ws = new WebSocket('ws://' + location.host + '/ws');
+      ws.onmessage = function(event) {
+        const msg = JSON.parse(event.data);
+        const box = document.getElementById('messages');
+        box.innerHTML += `<b>${msg.user}</b>: ${msg.content}<br>`;
+        box.scrollTop = box.scrollHeight;
+      };
+      ws.onclose = function() {
+        setTimeout(connectWS, 1000); // 斷線自動重連
+      };
+    }
+    connectWS();
+
+    document.getElementById('send').onclick = function() {
+      if (!ws || ws.readyState !== 1) return;
+      user = document.getElementById('user').value.trim();
+      const content = document.getElementById('content').value.trim();
+      if (!user || !content) return;
+      ws.send(JSON.stringify({ user, content }));
+      document.getElementById('content').value = '';
+    };
+  </script>
+</body>
+</html>

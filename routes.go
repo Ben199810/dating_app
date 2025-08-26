@@ -10,4 +10,5 @@ func RegisterRoutes(r *gin.Engine) {
 	r.GET("/messages", getMessagesHandler)
 	r.POST("/messages", postMessageHandler)
 	r.StaticFile("/chat.html", "./chat.html")
+	r.GET("/ws", wsHandler)
 }
