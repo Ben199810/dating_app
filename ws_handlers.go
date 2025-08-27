@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// 檢查請求來源設置 true，僅能在開發測試過程中使用
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
