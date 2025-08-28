@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  chat-server:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - GIN_MODE=release
+    volumes:
+      - ./web:/root/web
+    restart: unless-stopped
+
+  # 未來可以加入資料庫
+  # postgres:
+  #   image: postgres:14-alpine
+  #   environment:
+  #     POSTGRES_DB: chatdb
+  #     POSTGRES_USER: chatuser
+  #     POSTGRES_PASSWORD: chatpassword
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+
+# volumes:
+#   postgres_data:
