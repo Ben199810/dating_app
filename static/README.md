@@ -4,12 +4,14 @@
 
 ```
 static/
-├── html/           # HTML 頁面檔案
+├── html/                   # HTML 頁面檔案
 │   ├── index.html          # 首頁
 │   └── chat_websocket.html # WebSocket 聊天室頁面
-├── css/            # CSS 樣式檔案
-├── js/             # JavaScript 檔案
-└── assets/         # 靜態資源 (圖片、字型等)
+├── css/                    # CSS 樣式檔案
+│   └── common.css          # 通用樣式
+├── js/                     # JavaScript 檔案
+│   └── index.js            # 首頁 JavaScript
+└── assets/                 # 靜態資源 (圖片、字型等)
 ```
 
 ## 路由對應
