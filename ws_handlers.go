@@ -2,10 +2,16 @@ package main
 
 import (
 	"net/http"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
+
+type Message struct {
+	User    string `json:"user"`
+	Content string `json:"content"`
+}
 
 // 檢查請求來源設置 true，僅能在開發測試過程中使用
 var upgrader = websocket.Upgrader{
@@ -15,6 +21,7 @@ var upgrader = websocket.Upgrader{
 var (
 	clients   = make(map[*websocket.Conn]bool)
 	broadcast = make(chan Message)
+	mu        sync.Mutex
 )
 
 func wsHandler(c *gin.Context) {
