@@ -1,47 +1,41 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <title>WebSocket 聊天室</title>
-  <style>
-    body { font-family: sans-serif; margin: 2em; }
-    #messages { border: 1px solid #ccc; height: 200px; overflow-y: scroll; padding: 1em; margin-bottom: 1em; }
-    #user, #content { width: 120px; }
-    #send { margin-left: 1em; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket 聊天室</title>
+    <link rel="stylesheet" href="/static/css/chat.css">
 </head>
 <body>
-  <h2>WebSocket 聊天室</h2>
-  <div id="messages"></div>
-  <input id="user" placeholder="你的名字">
-  <input id="content" placeholder="輸入訊息">
-  <button id="send">送出</button>
+    <a href="/" class="back-link">← 返回首頁</a>
+    
+    <div class="chat-container">
+        <header class="chat-header">
+            <h1 class="chat-title">💬 即時聊天室</h1>
+        </header>
+        
+        <div id="messages"></div>
+        
+        <div class="input-container">
+            <div class="input-group">
+                <label for="user">使用者名稱</label>
+                <input id="user" type="text" placeholder="請輸入您的名字" autocomplete="username">
+            </div>
+            
+            <div class="input-group" style="flex: 1;">
+                <label for="content">訊息內容</label>
+                <input id="content" type="text" placeholder="輸入訊息..." autocomplete="off">
+            </div>
+            
+            <button id="send" disabled>發送</button>
+        </div>
+    </div>
+    
+    <div class="connection-status disconnected">
+        <span class="status-indicator"></span>
+        連線中...
+    </div>
 
-  <script>
-    let ws;
-    let user = '';
-    function connectWS() {
-      ws = new WebSocket('ws://' + location.host + '/ws');
-      ws.onmessage = function(event) {
-        const msg = JSON.parse(event.data);
-        const box = document.getElementById('messages');
-        box.innerHTML += `<b>${msg.user}</b>: ${msg.content}<br>`;
-        box.scrollTop = box.scrollHeight;
-      };
-      ws.onclose = function() {
-        setTimeout(connectWS, 1000); // 斷線自動重連
-      };
-    }
-    connectWS();
-
-    document.getElementById('send').onclick = function() {
-      if (!ws || ws.readyState !== 1) return;
-      user = document.getElementById('user').value.trim();
-      const content = document.getElementById('content').value.trim();
-      if (!user || !content) return;
-      ws.send(JSON.stringify({ user, content }));
-      document.getElementById('content').value = '';
-    };
-  </script>
+    <script src="/static/js/chat.js"></script>
 </body>
 </html>

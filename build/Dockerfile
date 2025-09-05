@@ -1,5 +1,5 @@
 # 使用官方 Go 映像檔作為基礎映像檔
-FROM golang:1.22-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
 # 設定工作目錄
 WORKDIR /app
