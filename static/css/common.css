@@ -81,6 +81,12 @@ body {
     transform: translateY(-5px);
 }
 
+/* 毛玻璃效果 - 通用類別 */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
 /* 響應式工具類 */
 @media (max-width: 768px) {
     .mobile-hidden {
