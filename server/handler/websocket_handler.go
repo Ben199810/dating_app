@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"net/http"
@@ -24,7 +24,7 @@ var (
 	mu        sync.Mutex
 )
 
-func wsHandler(c *gin.Context) {
+func WSHandler(c *gin.Context) {
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		return
@@ -46,7 +46,7 @@ func wsHandler(c *gin.Context) {
 	}
 }
 
-func handleMessages() {
+func HandleMessages() {
 	for {
 		msg := <-broadcast
 		mu.Lock()

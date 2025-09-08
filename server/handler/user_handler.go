@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"github.com/gin-gonic/gin"
@@ -11,13 +11,7 @@ type User struct {
 	Hobbies []string `json:"hobbies"`
 }
 
-func helloHandler(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"text": "Hello, World!",
-	})
-}
-
-func userHandler(c *gin.Context) {
+func UserHandler(c *gin.Context) {
 	user := User{
 		ID:      1,
 		Name:    "Ben",

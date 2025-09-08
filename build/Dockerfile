@@ -17,7 +17,7 @@ COPY . .
 RUN go build -o main .
 
 # 使用 alpine 作為最終映像檔
-FROM alpine:latest
+FROM alpine:3.18
 
 # 安裝 ca-certificates
 RUN apk --no-cache add ca-certificates

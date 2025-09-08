@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"golang_dev_docker/server/handler"
 )
 
 func RegisterRoutes(r *gin.Engine) {
@@ -13,7 +14,7 @@ func RegisterRoutes(r *gin.Engine) {
 	r.StaticFile("/chat", "./static/html/chat_websocket.html")
 
 	// API 路由
-	r.GET("/hello", helloHandler)
-	r.GET("/user", userHandler)
-	r.GET("/ws", wsHandler)
+	r.GET("/hello", handler.HelloHandler)
+	r.GET("/user", handler.UserHandler)
+	r.GET("/ws", handler.WSHandler)
 }
