@@ -20,7 +20,7 @@ RUN go build -o main .
 FROM alpine:3.18
 
 # 安裝 ca-certificates
-RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add ca-certificates=20241121-r1
 
 WORKDIR /root/
 
