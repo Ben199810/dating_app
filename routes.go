@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"golang_dev_docker/server/handler"
+
+	"github.com/gin-gonic/gin"
 )
 
 func RegisterRoutes(r *gin.Engine) {
@@ -16,9 +17,8 @@ func RegisterRoutes(r *gin.Engine) {
 	// API 路由群組
 	api := r.Group("/api")
 	{
-		api.GET("/hello", handler.HelloHandler)
-		api.GET("/user", handler.UserHandler)
-		api.POST("/users", handler.CreateUserHandler) // 新增用戶註冊端點
+		api.GET("/status", handler.HealthCheckHandler)        // 健康檢查端點
+		api.POST("/user/register", handler.CreateUserHandler) // 新增用戶註冊端點
 	}
 
 	// WebSocket 路由

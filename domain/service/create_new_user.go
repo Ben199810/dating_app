@@ -9,7 +9,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// UserService 提供用戶相關的業務邏輯
+// UserService 只知道 interface 的方法，不知道具體實現
 type UserService struct {
 	userRepo repository.UserRepository
 }
