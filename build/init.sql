@@ -1,14 +1,11 @@
 -- 建立使用者資料表
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    display_name VARCHAR(100),
-    avatar_url VARCHAR(255),
+    username VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    is_active BOOLEAN DEFAULT TRUE,
     INDEX idx_username (username),
     INDEX idx_email (email)
 );
@@ -54,20 +51,17 @@ INSERT INTO
     users (
         username,
         email,
-        password_hash,
-        display_name
+        password
     )
 VALUES (
         'admin',
         'admin@example.com',
-        '$2a$10$N9qo8uLOickgx2ZMRZoMye7J.YY8vC8.7dQ7dvAv7L5M5H5sHQyNW',
-        '管理員'
+        '$2a$10$N9qo8uLOickgx2ZMRZoMye7J.YY8vC8.7dQ7dvAv7L5M5H5sHQyNW'
     ),
     (
         'demo_user',
         'demo@example.com',
-        '$2a$10$N9qo8uLOickgx2ZMRZoMye7J.YY8vC8.7dQ7dvAv7L5M5H5sHQyNW',
-        '演示使用者'
+        '$2a$10$N9qo8uLOickgx2ZMRZoMye7J.YY8vC8.7dQ7dvAv7L5M5H5sHQyNW'
     )
 ON DUPLICATE KEY UPDATE
     username = username;
