@@ -5,13 +5,16 @@ import (
 	"golang_dev_docker/domain/entity"
 	"golang_dev_docker/domain/repository"
 	"strings"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
+// UserService 提供用戶相關的業務邏輯
 type UserService struct {
 	userRepo repository.UserRepository
 }
 
+// NewUserService 建立新的 UserService 實例
 func NewUserService(userRepo repository.UserRepository) *UserService {
 	return &UserService{
 		userRepo: userRepo,
