@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 
+	"golang_dev_docker/config"
 	"golang_dev_docker/domain/service"
 	"golang_dev_docker/infrastructure/mysql"
 	"golang_dev_docker/server/handler"
@@ -15,8 +15,14 @@ import (
 )
 
 func main() {
+	// 載入配置
+	cfg, err := config.LoadConfig("")
+	if err != nil {
+		log.Fatal("無法載入配置:", err)
+	}
+
 	// 初始化資料庫連線
-	db := initDB()
+	db := initDB(cfg.Database)
 	defer db.Close()
 
 	// 初始化 Repository 和 Service
@@ -29,24 +35,20 @@ func main() {
 	// 啟動 WebSocket 處理
 	go handler.HandleMessages()
 
+	// 設定 Gin 模式
+	gin.SetMode(cfg.Server.Mode)
+
 	// 設定路由
 	r := gin.Default()
 	RegisterRoutes(r)
 
 	// 啟動伺服器
-	r.Run(":8080")
+	r.Run(fmt.Sprintf(":%d", cfg.Server.Port))
 }
 
-func initDB() *sql.DB {
-	// 從環境變數獲取資料庫連線資訊
-	dbHost := getEnv("DB_HOST", "localhost")
-	dbPort := getEnv("DB_PORT", "3306")
-	dbUser := getEnv("DB_USER", "chat_user")
-	dbPassword := getEnv("DB_PASSWORD", "chat_password")
-	dbName := getEnv("DB_NAME", "chat_app")
-
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		dbUser, dbPassword, dbHost, dbPort, dbName)
+func initDB(dbConfig config.DatabaseConfig) *sql.DB {
+	// 使用配置建構 DSN
+	dsn := dbConfig.GetDSN()
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
@@ -57,13 +59,6 @@ func initDB() *sql.DB {
 		log.Fatal("無法ping資料庫:", err)
 	}
 
-	log.Println("資料庫連線成功")
+	log.Printf("資料庫連線成功 - Host: %s, DB: %s", dbConfig.Host, dbConfig.DBName)
 	return db
-}
-
-func getEnv(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return defaultValue
 }

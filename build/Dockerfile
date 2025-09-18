@@ -27,6 +27,9 @@ WORKDIR /root/
 # 從 builder 階段複製執行檔
 COPY --from=builder /app/main .
 
+# 複製配置檔案
+COPY --from=builder /app/config ./config
+
 # 複製靜態檔案資料夾
 COPY --from=builder /app/static ./static
 

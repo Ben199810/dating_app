@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Go 應用程式服務
   app:
@@ -9,11 +7,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_USER=chat_user
-      - DB_PASSWORD=chat_password
-      - DB_NAME=chat_app
+      - APP_ENV=production  # 使用 production 配置
     depends_on:
       mysql:
         condition: service_healthy

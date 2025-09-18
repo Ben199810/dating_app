@@ -1,0 +1,17 @@
+database:
+  host: mysql  # Docker Compose 中的 MySQL 服務名稱
+  port: 3306
+  user: chat_user
+  password: chat_password
+  dbname: chat_app
+  charset: utf8mb4
+  parseTime: true
+  loc: Local
+
+server:
+  port: 8080
+  mode: release
+
+logging:
+  level: warning
+  format: json

@@ -1,0 +1,17 @@
+database:
+  host: localhost
+  port: 3306
+  user: test_user
+  password: test_password
+  dbname: test_chat_app
+  charset: utf8mb4
+  parseTime: true
+  loc: Local
+
+server:
+  port: 8081
+  mode: test
+
+logging:
+  level: debug
+  format: text
