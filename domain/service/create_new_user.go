@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"golang_dev_docker/component/validator"
 	"golang_dev_docker/domain/entity"
 	"golang_dev_docker/domain/repository"
 	"strings"
@@ -11,11 +12,13 @@ import (
 
 type UserService struct {
 	userRepo repository.UserRepository
+	authRepo repository.AuthRepository // 用於檢查用戶是否已存在
 }
 
-func NewUserService(userRepo repository.UserRepository) *UserService {
+func NewUserService(userRepo repository.UserRepository, authRepo repository.AuthRepository) *UserService {
 	return &UserService{
 		userRepo: userRepo,
+		authRepo: authRepo,
 	}
 }
 
@@ -25,19 +28,29 @@ type CreateUserRequest struct {
 	Password string `json:"password" binding:"required,min=6"`
 }
 
+// CreateUser 處理用戶註冊
 func (s *UserService) CreateUser(req *CreateUserRequest) (*entity.UserInformation, error) {
-	// 驗證輸入
-	if err := s.validateInput(req.Username, req.Email, req.Password); err != nil {
+	// 使用通用驗證器驗證輸入
+	if err := validator.ValidateRegisterInput(req.Username, req.Email, req.Password); err != nil {
 		return nil, err
 	}
 
 	// 檢查 email 是否已存在
-	existingUser, err := s.userRepo.GetByEmail(req.Email)
+	existingUser, err := s.authRepo.GetUserByEmail(req.Email)
 	if err != nil {
 		return nil, err
 	}
 	if existingUser != nil {
 		return nil, errors.New("email 已被使用")
+	}
+
+	// 檢查用戶名是否已存在
+	usernameExists, err := s.authRepo.UserExists(req.Email, req.Username)
+	if err != nil {
+		return nil, err
+	}
+	if usernameExists {
+		return nil, errors.New("用戶名已被使用")
 	}
 
 	// 密碼加密
@@ -61,33 +74,4 @@ func (s *UserService) CreateUser(req *CreateUserRequest) (*entity.UserInformatio
 	// 不返回密碼
 	user.Password = ""
 	return user, nil
-}
-
-func (s *UserService) validateInput(username, email, password string) error {
-	// 驗證名稱
-	if strings.TrimSpace(username) == "" {
-		return errors.New("名稱不能為空")
-	}
-
-	// 驗證 email
-	if strings.TrimSpace(email) == "" {
-		return errors.New("email 不能為空")
-	}
-
-	// 簡單的 email 格式驗證
-	if !strings.Contains(email, "@") || !strings.Contains(email, ".") {
-		return errors.New("email 格式不正確")
-	}
-
-	// 驗證密碼
-	if strings.TrimSpace(password) == "" {
-		return errors.New("密碼不能為空")
-	}
-
-	// 密碼長度驗證
-	if len(password) < 6 {
-		return errors.New("密碼長度至少需要 6 個字符")
-	}
-
-	return nil
 }
