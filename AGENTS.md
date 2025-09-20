@@ -141,3 +141,16 @@ Docker 環境預設使用 `production.yaml` 配置，可以通過修改 `docker-
 - [Docker Compose 文件](https://docs.docker.com/compose/)
 - [Go 官方文件](https://golang.org/doc/)
 - [Gin 框架文件](https://gin-gonic.com/docs/)
+
+# 專案編碼風格與規範
+
+## 變數命名規範
+
+- private 變數: 使用小駝峰式命名法 (e.g. `myVariable`)
+- public 變數: 使用大駝峰式命名法 (e.g. `MyVariable`)
+
+## 函式命名規範
+
+- 動詞開頭，例如 `GetUser`, `SetUser`
+- 私有函式使用小駝峰式命名法 (e.g. `getUser`)
+- 公有函式使用大駝峰式命名法 (e.g. `GetUser`)
