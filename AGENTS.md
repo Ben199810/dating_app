@@ -154,3 +154,33 @@ Docker 環境預設使用 `production.yaml` 配置，可以通過修改 `docker-
 - 動詞開頭，例如 `GetUser`, `SetUser`
 - 私有函式使用小駝峰式命名法 (e.g. `getUser`)
 - 公有函式使用大駝峰式命名法 (e.g. `GetUser`)
+
+# 檔案結構
+
+```
+.
+├── build
+│   ├── docker-compose.yaml # 本機環境開發的 docker-compose 配置
+│   ├── Dockerfile          # 應用程式的 Dockerfile
+│   └── init.sql            # 資料庫初始化 SQL 腳本(本機環境開發使用)
+├── config
+│   ├── config.go        # 配置加載邏輯
+│   ├── development.yaml # 本機開發環境配置
+│   ├── production.yaml  # 生產環境配置
+│   └── test.yaml        # 測試環境配置
+├── domain               # 領域模型
+│   ├── entity           # 實體
+│   ├── repository       # 儲存庫介面
+│   └── service          # 服務介面 (業務邏輯)
+├── infrastructure       # 基礎設施層
+│   └── mysql            # MySQL 相關
+├── server               # 伺服器
+│   └── handler          # HTTP 處理器
+├── static               # 靜態資源
+├── .env.example        # 環境變數範例檔案
+├── go.mod              # Go 模組檔案
+├── go.sum              # Go 模組校驗檔案
+├── main.go             # 應用程式入口
+├── router.go           # 路由定義
+└── README.md           # 專案說明文件
+```
