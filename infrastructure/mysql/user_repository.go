@@ -108,3 +108,39 @@ func (r *userRepository) Delete(id int) error {
 	_, err := r.db.Exec(query, id)
 	return err
 }
+
+func (r *userRepository) GetUserProfile(id int) (*entity.UserInformation, error) {
+	query := `
+				SELECT id, username, email, created_at, updated_at 
+				FROM users 
+				WHERE id = ?
+		`
+	user := &entity.UserInformation{}
+	err := r.db.QueryRow(query, id).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil // 找不到用戶，返回 nil 而不是錯誤
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (r *userRepository) UpdateUserProfile(user *entity.UserInformation) error {
+	query := `
+				UPDATE users 
+				SET username = ?, email = ?, updated_at = NOW() 
+				WHERE id = ?
+		`
+
+	_, err := r.db.Exec(query, user.Username, user.Email, user.ID)
+	return err
+}
