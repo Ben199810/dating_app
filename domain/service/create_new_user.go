@@ -9,12 +9,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// UserService 只知道 interface 的方法，不知道具體實現
 type UserService struct {
 	userRepo repository.UserRepository
 }
 
-// NewUserService 建立新的 UserService 實例
 func NewUserService(userRepo repository.UserRepository) *UserService {
 	return &UserService{
 		userRepo: userRepo,

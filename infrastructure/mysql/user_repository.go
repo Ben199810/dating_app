@@ -10,6 +10,7 @@ type userRepository struct {
 	db *sql.DB
 }
 
+// repository.UserRepository 定義了這個 struct 需要實現的方法
 func NewUserRepository(db *sql.DB) repository.UserRepository {
 	return &userRepository{
 		db: db,

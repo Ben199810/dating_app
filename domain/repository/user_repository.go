@@ -2,7 +2,7 @@ package repository
 
 import "golang_dev_docker/domain/entity"
 
-// UserRepository 定義用戶資料庫操作的介面
+// UserRepository 定義用戶相關的儲存庫會具備哪些操作
 type UserRepository interface {
 	Create(user *entity.UserInformation) error
 	GetByEmail(email string) (*entity.UserInformation, error)

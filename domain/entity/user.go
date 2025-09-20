@@ -4,7 +4,6 @@ import "time"
 
 // UserInformation 定義用戶的基本資訊
 type UserInformation struct {
-	ID        int       `json:"id" db:"id"`
 	Username  string    `json:"username" db:"username"`
 	Email     string    `json:"email" db:"email"`
 	Password  string    `json:"-" db:"password"` // 不序列化密碼
