@@ -1,0 +1,132 @@
+/* 註冊頁面專用樣式 */
+
+/* 引入通用樣式 */
+@import url('/static/css/common.css');
+
+/* 註冊頁面佈局 */
+.main-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    min-height: 100vh;
+}
+
+.register-container {
+    max-width: 400px;
+    width: 100%;
+    padding: 2rem;
+}
+
+/* 移除註冊容器的懸停效果 */
+.register-container.glass-card:hover {
+    transform: none;
+}
+
+/* 表單樣式 */
+.register-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    color: white;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.form-group input {
+    padding: 0.8rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    color: white;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #ff6b6b;
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.3);
+}
+
+.form-group input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* 返回連結 */
+.back-link {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    color: white;
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.back-link:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+/* 訊息顯示 */
+.error-message {
+    color: #ff5252;
+    text-align: center;
+    margin-top: 1rem;
+    display: none;
+    padding: 0.5rem;
+    background: rgba(255, 82, 82, 0.1);
+    border-radius: 5px;
+    border-left: 3px solid #ff5252;
+}
+
+.success-message {
+    color: #4CAF50;
+    text-align: center;
+    margin-top: 1rem;
+    display: none;
+    padding: 0.5rem;
+    background: rgba(76, 175, 80, 0.1);
+    border-radius: 5px;
+    border-left: 3px solid #4CAF50;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .main-container {
+        padding: 1rem;
+    }
+    
+    .register-container {
+        max-width: 100%;
+        padding: 1.5rem;
+    }
+    
+    .back-link {
+        position: static;
+        display: inline-block;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    
+    .form-group input {
+        padding: 0.7rem;
+        font-size: 0.9rem;
+    }
+}
