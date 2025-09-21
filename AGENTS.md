@@ -177,6 +177,17 @@ Docker 環境預設使用 `production.yaml` 配置，可以通過修改 `docker-
 ├── server               # 伺服器
 │   └── handler          # HTTP 處理器
 ├── static               # 靜態資源
+│   ├── css              # CSS 檔案
+│   │   ├── common.css      # 共用樣式
+│   │   ├── index.css       # 首頁樣式
+│   │   ├── login.css       # 登入頁樣式
+│   │   ├── register.css    # 註冊頁樣式
+│   │   └── chat.css        # 聊天頁樣式
+│   ├── html             # HTML 檔案
+│   │   ├── chat_websocket.html # 聊天頁面
+│   │   ├── index.html         # 首頁
+│   │   └── register.html      # 註冊頁面
+│   └── js               # JavaScript 檔案
 ├── .env.example        # 環境變數範例檔案
 ├── go.mod              # Go 模組檔案
 ├── go.sum              # Go 模組校驗檔案
