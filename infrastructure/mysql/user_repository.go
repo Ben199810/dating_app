@@ -6,15 +6,27 @@ import (
 	"golang_dev_docker/domain/repository"
 )
 
-type userRepository struct {
+// baseRepository 提供基礎的資料庫操作能力
+type baseRepository struct {
 	db *sql.DB
 }
 
+// userRepository 專注於用戶相關的 CRUD 操作
+type userRepository struct {
+	baseRepository
+}
+
+// authRepository 專注於認證相關操作
+type authRepository struct {
+	baseRepository
+}
+
 // repository.UserRepository 定義了這個 struct 需要實現的方法
-func NewUserRepository(db *sql.DB) repository.UserRepository {
-	return &userRepository{
-		db: db,
-	}
+func NewUserRepository(db *sql.DB) (repository.UserRepository, repository.AuthRepository) {
+	base := baseRepository{db: db}
+	userRepo := &userRepository{baseRepository: base}
+	authRepo := &authRepository{baseRepository: base}
+	return userRepo, authRepo
 }
 
 func (r *userRepository) Create(user *entity.UserInformation) error {
@@ -143,4 +155,86 @@ func (r *userRepository) UpdateUserProfile(user *entity.UserInformation) error {
 
 	_, err := r.db.Exec(query, user.Username, user.Email, user.ID)
 	return err
+}
+
+// AuthRepository 介面實作 - 移到 authRepository 結構體
+func (r *authRepository) GetUserByEmail(email string) (*entity.UserInformation, error) {
+	query := `
+        SELECT id, username, email, password, created_at, updated_at 
+        FROM users 
+        WHERE email = ?
+    `
+
+	user := &entity.UserInformation{}
+	err := r.db.QueryRow(query, email).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.Password,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil // 找不到用戶，返回 nil 而不是錯誤
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (r *authRepository) GetUserByUsername(username string) (*entity.UserInformation, error) {
+	query := `
+        SELECT id, username, email, password, created_at, updated_at 
+        FROM users 
+        WHERE username = ?
+    `
+
+	user := &entity.UserInformation{}
+	err := r.db.QueryRow(query, username).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.Password,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (r *authRepository) UpdateLastLoginTime(userID int) error {
+	query := `
+        UPDATE users 
+        SET updated_at = NOW() 
+        WHERE id = ?
+    `
+
+	_, err := r.db.Exec(query, userID)
+	return err
+}
+
+func (r *authRepository) UserExists(email, username string) (bool, error) {
+	query := `
+        SELECT COUNT(*) 
+        FROM users 
+        WHERE email = ? OR username = ?
+    `
+
+	var count int
+	err := r.db.QueryRow(query, email, username).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }

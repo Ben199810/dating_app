@@ -26,8 +26,8 @@ func main() {
 	defer db.Close()
 
 	// 初始化 Repository 和 Service
-	userRepo := mysql.NewUserRepository(db)
-	userService := service.NewUserService(userRepo)
+	userRepo, authRepo := mysql.NewUserRepository(db)
+	userService := service.NewUserService(userRepo, authRepo)
 
 	// 設定 Handler 的依賴
 	handler.SetUserService(userService)
