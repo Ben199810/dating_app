@@ -18,8 +18,17 @@ func RegisterRoutes(r *gin.Engine) {
 	// API 路由群組
 	api := r.Group("/api")
 	{
+		// 基本功能
 		api.GET("/status", handler.HealthCheckHandler)        // 健康檢查端點
 		api.POST("/user/register", handler.CreateUserHandler) // 新增用戶註冊端點
+
+		// 用戶資料管理 (需要實作 handler 初始化)
+		// api.PUT("/users/:id/basic-info", handler.UpdateBasicInfo)
+		// api.PUT("/users/:id/location", handler.UpdateLocation)
+		// api.POST("/users/:id/photos", handler.AddPhoto)
+		// api.GET("/users/:id/nearby", handler.FindNearbyUsers)
+		// api.GET("/users/:id/search", handler.SearchUsers)
+		// api.POST("/users/:id/profile", handler.CreateProfile)
 	}
 
 	// WebSocket 路由

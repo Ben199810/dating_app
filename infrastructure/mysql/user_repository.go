@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"database/sql"
+	"strings"
 	"golang_dev_docker/domain/entity"
 	"golang_dev_docker/domain/repository"
 )
@@ -14,6 +15,7 @@ type baseRepository struct {
 // userRepository 專注於用戶相關的 CRUD 操作
 type userRepository struct {
 	baseRepository
+	entityMapper *UserEntityMapper
 }
 
 // authRepository 專注於認證相關操作
@@ -24,18 +26,30 @@ type authRepository struct {
 // repository.UserRepository 定義了這個 struct 需要實現的方法
 func NewUserRepository(db *sql.DB) (repository.UserRepository, repository.AuthRepository) {
 	base := baseRepository{db: db}
-	userRepo := &userRepository{baseRepository: base}
+	userRepo := &userRepository{
+		baseRepository: base,
+		entityMapper:   NewUserEntityMapper(),
+	}
 	authRepo := &authRepository{baseRepository: base}
 	return userRepo, authRepo
 }
 
 func (r *userRepository) Create(user *entity.UserInformation) error {
 	query := `
-        INSERT INTO users (username, email, password, created_at, updated_at) 
-        VALUES (?, ?, ?, NOW(), NOW())
+        INSERT INTO users (
+            username, email, password, age, gender, bio, interests,
+            location_lat, location_lng, city, country, is_verified,
+            status, profile_views, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
     `
 
-	result, err := r.db.Exec(query, user.Username, user.Email, user.Password)
+	// 使用 EntityMapper 準備插入資料
+	values, err := r.entityMapper.PrepareForInsert(user)
+	if err != nil {
+		return err
+	}
+
+	result, err := r.db.Exec(query, values...)
 	if err != nil {
 		return err
 	}
@@ -52,19 +66,21 @@ func (r *userRepository) Create(user *entity.UserInformation) error {
 
 func (r *userRepository) GetByEmail(email string) (*entity.UserInformation, error) {
 	query := `
-        SELECT id, username, email, password, created_at, updated_at 
+        SELECT id, username, email, password, age, gender, bio, interests,
+               location_lat, location_lng, city, country, is_verified,
+               status, last_active_at, profile_views, created_at, updated_at
         FROM users 
         WHERE email = ?
     `
 
-	user := &entity.UserInformation{}
+	dbModel := &UserDBModel{}
+
 	err := r.db.QueryRow(query, email).Scan(
-		&user.ID,
-		&user.Username,
-		&user.Email,
-		&user.Password,
-		&user.CreatedAt,
-		&user.UpdatedAt,
+		&dbModel.ID, &dbModel.Username, &dbModel.Email, &dbModel.Password,
+		&dbModel.Age, &dbModel.Gender, &dbModel.Bio, &dbModel.Interests,
+		&dbModel.LocationLat, &dbModel.LocationLng, &dbModel.City, &dbModel.Country,
+		&dbModel.IsVerified, &dbModel.Status, &dbModel.LastActiveAt, &dbModel.ProfileViews,
+		&dbModel.CreatedAt, &dbModel.UpdatedAt,
 	)
 
 	if err != nil {
@@ -74,24 +90,32 @@ func (r *userRepository) GetByEmail(email string) (*entity.UserInformation, erro
 		return nil, err
 	}
 
+	// 使用 EntityMapper 轉換為領域實體
+	user, err := r.entityMapper.ToEntity(dbModel)
+	if err != nil {
+		return nil, err
+	}
+
 	return user, nil
 }
 
 func (r *userRepository) GetByID(id int) (*entity.UserInformation, error) {
 	query := `
-        SELECT id, username, email, password, created_at, updated_at 
+        SELECT id, username, email, password, age, gender, bio, interests,
+               location_lat, location_lng, city, country, is_verified,
+               status, last_active_at, profile_views, created_at, updated_at
         FROM users 
         WHERE id = ?
     `
 
-	user := &entity.UserInformation{}
+	dbModel := &UserDBModel{}
+
 	err := r.db.QueryRow(query, id).Scan(
-		&user.ID,
-		&user.Username,
-		&user.Email,
-		&user.Password,
-		&user.CreatedAt,
-		&user.UpdatedAt,
+		&dbModel.ID, &dbModel.Username, &dbModel.Email, &dbModel.Password,
+		&dbModel.Age, &dbModel.Gender, &dbModel.Bio, &dbModel.Interests,
+		&dbModel.LocationLat, &dbModel.LocationLng, &dbModel.City, &dbModel.Country,
+		&dbModel.IsVerified, &dbModel.Status, &dbModel.LastActiveAt, &dbModel.ProfileViews,
+		&dbModel.CreatedAt, &dbModel.UpdatedAt,
 	)
 
 	if err != nil {
@@ -101,17 +125,35 @@ func (r *userRepository) GetByID(id int) (*entity.UserInformation, error) {
 		return nil, err
 	}
 
+	// 使用 EntityMapper 轉換為領域實體
+	user, err := r.entityMapper.ToEntity(dbModel)
+	if err != nil {
+		return nil, err
+	}
+
 	return user, nil
 }
 
 func (r *userRepository) Update(user *entity.UserInformation) error {
+	// 使用 EntityMapper 轉換為資料庫模型
+	dbModel, err := r.entityMapper.ToDBModel(user)
+	if err != nil {
+		return err
+	}
+
 	query := `
         UPDATE users 
-        SET username = ?, email = ?, password = ?, updated_at = NOW() 
+        SET username = ?, email = ?, age = ?, gender = ?, bio = ?, interests = ?,
+            location_lat = ?, location_lng = ?, city = ?, country = ?,
+            is_verified = ?, status = ?, updated_at = NOW()
         WHERE id = ?
     `
 
-	_, err := r.db.Exec(query, user.Username, user.Email, user.Password, user.ID)
+	_, err = r.db.Exec(query,
+		dbModel.Username, dbModel.Email, dbModel.Age, dbModel.Gender, dbModel.Bio,
+		dbModel.Interests, dbModel.LocationLat, dbModel.LocationLng, dbModel.City,
+		dbModel.Country, dbModel.IsVerified, dbModel.Status, dbModel.ID,
+	)
 	return err
 }
 
@@ -237,4 +279,230 @@ func (r *authRepository) UserExists(email, username string) (bool, error) {
 	}
 
 	return count > 0, nil
+}
+
+// 新增的交友軟體功能實現
+func (r *userRepository) GetUsersByLocation(lat, lng float64, radiusKm int, limit int) ([]*entity.UserInformation, error) {
+	// 使用 Haversine 公式計算距離
+	query := `
+		SELECT id, username, email, age, gender, bio, interests,
+			   location_lat, location_lng, city, country, is_verified,
+			   status, last_active_at, profile_views, created_at, updated_at,
+			   (6371 * acos(cos(radians(?)) * cos(radians(location_lat)) * 
+			   cos(radians(location_lng) - radians(?)) + sin(radians(?)) * 
+			   sin(radians(location_lat)))) AS distance
+		FROM users 
+		WHERE location_lat IS NOT NULL 
+		  AND location_lng IS NOT NULL
+		  AND status = 'active'
+		HAVING distance <= ?
+		ORDER BY distance
+		LIMIT ?
+	`
+
+	rows, err := r.db.Query(query, lat, lng, lat, radiusKm, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []*entity.UserInformation
+	for rows.Next() {
+		dbModel := &UserDBModel{}
+		var distance float64
+
+		err := rows.Scan(
+			&dbModel.ID, &dbModel.Username, &dbModel.Email, &dbModel.Age, &dbModel.Gender,
+			&dbModel.Bio, &dbModel.Interests, &dbModel.LocationLat, &dbModel.LocationLng,
+			&dbModel.City, &dbModel.Country, &dbModel.IsVerified, &dbModel.Status,
+			&dbModel.LastActiveAt, &dbModel.ProfileViews, &dbModel.CreatedAt, &dbModel.UpdatedAt,
+			&distance,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// 使用 EntityMapper 轉換為領域實體
+		user, err := r.entityMapper.ToEntity(dbModel)
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+func (r *userRepository) GetUsersByAgeRange(minAge, maxAge int, limit int) ([]*entity.UserInformation, error) {
+	query := `
+		SELECT id, username, email, age, gender, bio, interests,
+			   location_lat, location_lng, city, country, is_verified,
+			   status, last_active_at, profile_views, created_at, updated_at
+		FROM users 
+		WHERE age BETWEEN ? AND ?
+		  AND status = 'active'
+		ORDER BY last_active_at DESC
+		LIMIT ?
+	`
+
+	rows, err := r.db.Query(query, minAge, maxAge, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []*entity.UserInformation
+	for rows.Next() {
+		dbModel := &UserDBModel{}
+
+		err := rows.Scan(
+			&dbModel.ID, &dbModel.Username, &dbModel.Email, &dbModel.Age, &dbModel.Gender,
+			&dbModel.Bio, &dbModel.Interests, &dbModel.LocationLat, &dbModel.LocationLng,
+			&dbModel.City, &dbModel.Country, &dbModel.IsVerified, &dbModel.Status,
+			&dbModel.LastActiveAt, &dbModel.ProfileViews, &dbModel.CreatedAt, &dbModel.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// 使用 EntityMapper 轉換為領域實體
+		user, err := r.entityMapper.ToEntity(dbModel)
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+func (r *userRepository) GetUsersByGender(gender entity.Gender, limit int) ([]*entity.UserInformation, error) {
+	query := `
+		SELECT id, username, email, age, gender, bio, interests,
+			   location_lat, location_lng, city, country, is_verified,
+			   status, last_active_at, profile_views, created_at, updated_at
+		FROM users 
+		WHERE gender = ?
+		  AND status = 'active'
+		ORDER BY last_active_at DESC
+		LIMIT ?
+	`
+
+	rows, err := r.db.Query(query, gender, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []*entity.UserInformation
+	for rows.Next() {
+		dbModel := &UserDBModel{}
+
+		err := rows.Scan(
+			&dbModel.ID, &dbModel.Username, &dbModel.Email, &dbModel.Age, &dbModel.Gender,
+			&dbModel.Bio, &dbModel.Interests, &dbModel.LocationLat, &dbModel.LocationLng,
+			&dbModel.City, &dbModel.Country, &dbModel.IsVerified, &dbModel.Status,
+			&dbModel.LastActiveAt, &dbModel.ProfileViews, &dbModel.CreatedAt, &dbModel.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// 使用 EntityMapper 轉換為領域實體
+		user, err := r.entityMapper.ToEntity(dbModel)
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+func (r *userRepository) UpdateLastActiveTime(userID int) error {
+	query := `
+		UPDATE users 
+		SET last_active_at = NOW(), updated_at = NOW()
+		WHERE id = ?
+	`
+
+	_, err := r.db.Exec(query, userID)
+	return err
+}
+
+func (r *userRepository) SearchUsers(filters map[string]interface{}, limit, offset int) ([]*entity.UserInformation, error) {
+	baseQuery := `
+		SELECT id, username, email, age, gender, bio, interests,
+			   location_lat, location_lng, city, country, is_verified,
+			   status, last_active_at, profile_views, created_at, updated_at
+		FROM users 
+		WHERE status = 'active'
+	`
+
+	var conditions []string
+	var args []interface{}
+
+	// 動態建構 WHERE 條件
+	if ageMin, ok := filters["age_min"]; ok {
+		conditions = append(conditions, "age >= ?")
+		args = append(args, ageMin)
+	}
+	if ageMax, ok := filters["age_max"]; ok {
+		conditions = append(conditions, "age <= ?")
+		args = append(args, ageMax)
+	}
+	if gender, ok := filters["gender"]; ok {
+		conditions = append(conditions, "gender = ?")
+		args = append(args, gender)
+	}
+	if city, ok := filters["city"]; ok {
+		conditions = append(conditions, "city = ?")
+		args = append(args, city)
+	}
+	if isVerified, ok := filters["is_verified"]; ok {
+		conditions = append(conditions, "is_verified = ?")
+		args = append(args, isVerified)
+	}
+
+	// 組合完整查詢
+	if len(conditions) > 0 {
+		baseQuery += " AND " + strings.Join(conditions, " AND ")
+	}
+
+	baseQuery += " ORDER BY last_active_at DESC LIMIT ? OFFSET ?"
+	args = append(args, limit, offset)
+
+	rows, err := r.db.Query(baseQuery, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []*entity.UserInformation
+	for rows.Next() {
+		dbModel := &UserDBModel{}
+
+		err := rows.Scan(
+			&dbModel.ID, &dbModel.Username, &dbModel.Email, &dbModel.Age, &dbModel.Gender,
+			&dbModel.Bio, &dbModel.Interests, &dbModel.LocationLat, &dbModel.LocationLng,
+			&dbModel.City, &dbModel.Country, &dbModel.IsVerified, &dbModel.Status,
+			&dbModel.LastActiveAt, &dbModel.ProfileViews, &dbModel.CreatedAt, &dbModel.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// 使用 EntityMapper 轉換為領域實體
+		user, err := r.entityMapper.ToEntity(dbModel)
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
 }

@@ -61,9 +61,13 @@ func (s *UserService) CreateUser(req *CreateUserRequest) (*entity.UserInformatio
 
 	// 建立用戶
 	user := &entity.UserInformation{
-		Username: strings.TrimSpace(req.Username),
-		Email:    strings.TrimSpace(req.Email),
-		Password: string(hashedPassword),
+		Username:     strings.TrimSpace(req.Username),
+		Email:        strings.TrimSpace(req.Email),
+		Password:     string(hashedPassword),
+		IsVerified:   false,
+		Status:       entity.UserStatusActive,
+		ProfileViews: 0,
+		Interests:    entity.StringArray{}, // 初始化為空陣列
 	}
 
 	// 儲存到資料庫
