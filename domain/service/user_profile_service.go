@@ -5,7 +5,18 @@ import (
 	"golang_dev_docker/component/validator"
 	"golang_dev_docker/domain/entity"
 	"golang_dev_docker/domain/repository"
+	"strconv"
 )
+
+// UpdateUserProfileRequest 更新用戶個人資料請求
+type UpdateUserProfileRequest struct {
+	Username string          `json:"username"`
+	Age      *int            `json:"age"`
+	Gender   *entity.Gender  `json:"gender"`
+	Country  string          `json:"country"`
+	City     string          `json:"city"`
+	Bio      *string         `json:"bio"`
+}
 
 type UserProfileService struct {
 	userRepo           repository.UserRepository
@@ -193,4 +204,75 @@ func (s *UserProfileService) SearchCompatibleUsers(userID int, limit int) ([]*en
 	// 這裡可以添加更複雜的過濾邏輯
 
 	return s.userRepo.SearchUsers(filters, limit, 0)
+}
+
+// GetUserProfile 獲取用戶個人資料
+func (s *UserProfileService) GetUserProfile(userIDStr string) (*entity.UserInformation, error) {
+	// 轉換用戶 ID
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		return nil, errors.New("無效的用戶 ID")
+	}
+
+	// 獲取用戶基本資訊
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, errors.New("用戶不存在")
+	}
+
+	// 清空密碼欄位
+	user.Password = ""
+
+	return user, nil
+}
+
+// UpdateUserProfile 更新用戶個人資料
+func (s *UserProfileService) UpdateUserProfile(userIDStr string, req *UpdateUserProfileRequest) error {
+	// 轉換用戶 ID
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		return errors.New("無效的用戶 ID")
+	}
+
+	// 驗證用戶是否存在
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return errors.New("用戶不存在")
+	}
+
+	// 更新用戶基本資訊
+	if req.Username != "" {
+		if err := validator.ValidateUsername(req.Username); err != nil {
+			return err
+		}
+		user.Username = req.Username
+	}
+
+	if req.Country != "" {
+		user.Country = &req.Country
+	}
+
+	if req.City != "" {
+		user.City = &req.City
+	}
+
+	// 更新額外的個人資料欄位
+	if req.Age != nil || req.Gender != nil || req.Bio != nil {
+		if err := s.UpdateUserBasicInfo(userID, req.Age, req.Gender, req.Bio, nil); err != nil {
+			return err
+		}
+	}
+
+	// 更新用戶基本資訊
+	if err := s.userRepo.Update(user); err != nil {
+		return err
+	}
+
+	return nil
 }

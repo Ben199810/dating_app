@@ -28,9 +28,15 @@ func main() {
 	// 初始化 Repository 和 Service
 	userRepo, authRepo := mysql.NewUserRepository(db)
 	userService := service.NewUserService(userRepo, authRepo)
+	authService := service.NewAuthService(authRepo)
+	
+	// 初始化 UserProfileService (暫時使用 nil 作為其他 repository)
+	userProfileService := service.NewUserProfileService(userRepo, nil, nil, nil)
 
 	// 設定 Handler 的依賴
 	handler.SetUserService(userService)
+	handler.SetAuthService(authService)
+	handler.SetUserProfileService(userProfileService)
 
 	// 啟動 WebSocket 處理
 	go handler.HandleMessages()

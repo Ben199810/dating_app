@@ -36,6 +36,20 @@
     background: rgba(255, 255, 255, 0.2);
 }
 
+/* 登入按鈕特殊樣式 */
+.nav-links a.login-btn {
+    background: #4CAF50;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.nav-links a.login-btn:hover {
+    background: #45a049;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.5);
+}
+
 /* 註冊按鈕特殊樣式 */
 .nav-links a.register-btn {
     background: #ff6b6b;

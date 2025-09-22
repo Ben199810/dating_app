@@ -14,6 +14,8 @@ func RegisterRoutes(r *gin.Engine) {
 	r.StaticFile("/", "./static/html/index.html")
 	r.StaticFile("/chat", "./static/html/chat_websocket.html")
 	r.StaticFile("/register", "./static/html/register.html")
+	r.StaticFile("/login", "./static/html/login.html")
+	r.StaticFile("/profile", "./static/html/profile.html")
 
 	// API 路由群組
 	api := r.Group("/api")
@@ -21,6 +23,19 @@ func RegisterRoutes(r *gin.Engine) {
 		// 基本功能
 		api.GET("/status", handler.HealthCheckHandler)        // 健康檢查端點
 		api.POST("/user/register", handler.CreateUserHandler) // 新增用戶註冊端點
+		
+		// 身份驗證
+		auth := api.Group("/auth")
+		{
+			auth.POST("/login", handler.LoginHandler) // 用戶登入端點
+		}
+		
+		// 用戶個人資料
+		user := api.Group("/user")
+		{
+			user.GET("/profile", handler.GetUserProfileHandler)    // 獲取用戶個人資料
+			user.PUT("/profile", handler.UpdateUserProfileHandler) // 更新用戶個人資料
+		}
 
 		// 用戶資料管理 (需要實作 handler 初始化)
 		// api.PUT("/users/:id/basic-info", handler.UpdateBasicInfo)
