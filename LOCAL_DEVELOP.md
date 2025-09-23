@@ -30,7 +30,7 @@ docker compose -f build/docker-compose.yaml up -d
 docker compose -f build/docker-compose.yaml up
 ```
 
-# 📋 服務說明
+## 📋 服務說明
 
 啟動後將包含以下服務：
 
@@ -40,7 +40,7 @@ docker compose -f build/docker-compose.yaml up
 | **MySQL 資料庫** | 3306 | 資料庫服務 |
 | **phpMyAdmin** | 8081 | 資料庫管理介面 |
 
-# 🔧 常用指令
+## 🔧 常用指令
 
 ## 檢查服務狀態
 
@@ -68,7 +68,7 @@ docker compose -f build/docker-compose.yaml down -v
 docker compose -f build/docker-compose.yaml restart app
 ```
 
-# 🌐 存取應用程式
+## 🌐 存取應用程式
 
 啟動成功後，您可以透過以下網址存取：
 
@@ -77,7 +77,7 @@ docker compose -f build/docker-compose.yaml restart app
 - **API 健康檢查**: <http://localhost:8080/api/status>
 - **phpMyAdmin**: <http://localhost:8081>
 
-# 🐛 故障排除
+## 🐛 故障排除
 
 ## 常見問題
 
@@ -117,7 +117,7 @@ docker compose -f build/docker-compose.yaml restart app
    docker compose -f build/docker-compose.yaml up -d
    ```
 
-# ⚙️ 環境配置
+## ⚙️ 環境配置
 
 應用程式使用 YAML 配置檔案管理不同環境：
 
@@ -127,14 +127,14 @@ docker compose -f build/docker-compose.yaml restart app
 
 Docker 環境預設使用 `production.yaml` 配置，可以通過修改 `docker-compose.yaml` 中的 `APP_ENV` 環境變數來變更。
 
-# 📝 開發流程
+## 📝 開發流程
 
 1. **修改程式碼** → 在本機編輯器中修改
 2. **重新編譯** → `docker compose -f build/docker-compose.yaml build`
 3. **重啟服務** → `docker compose -f build/docker-compose.yaml up -d`
 4. **測試應用** → 訪問 <http://localhost:8080>
 
-# 🔗 相關資源
+## 🔗 相關資源
 
 - [Docker Compose 文件](https://docs.docker.com/compose/)
 - [Go 官方文件](https://golang.org/doc/)
