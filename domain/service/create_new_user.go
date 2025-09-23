@@ -70,7 +70,7 @@ func (s *UserService) CreateUser(req *CreateUserRequest) (*entity.UserInformatio
 	}
 
 	// 儲存到資料庫
-	if err := s.userRepo.Create(user); err != nil {
+	if err := s.userRepo.CreateUser(user); err != nil {
 		return nil, err
 	}
 

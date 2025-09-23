@@ -56,7 +56,7 @@ func (s *UserProfileService) UpdateBasicInfo(userID int, age *int, gender *entit
 	}
 
 	// 取得用戶現有資訊
-	user, err := s.userRepo.GetByID(userID)
+	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func (s *UserProfileService) UpdateBasicInfo(userID int, age *int, gender *entit
 	user.Age = age
 	user.Gender = gender
 
-	return s.userRepo.Update(user)
+	return s.userRepo.UpdateUser(user)
 }
 
 // UpdateProfileInfo 更新用戶檔案資訊（bio、interests 等）
@@ -193,7 +193,7 @@ func (s *UserProfileService) CreateUserProfile(userID int, profile *entity.UserP
 // GetNearbyUsers 取得附近的用戶
 func (s *UserProfileService) GetNearbyUsers(userID int, radiusKm float64, limit int) ([]*entity.UserInformation, error) {
 	// 取得用戶資訊
-	user, err := s.userRepo.GetByID(userID)
+	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +254,7 @@ func (s *UserProfileService) GetUserProfile(userIDStr string) (*entity.UserInfor
 	}
 
 	// 獲取用戶基本資訊
-	user, err := s.userRepo.GetByID(userID)
+	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +277,7 @@ func (s *UserProfileService) UpdateUserProfile(userIDStr string, req *UpdateUser
 	}
 
 	// 驗證用戶是否存在
-	user, err := s.userRepo.GetByID(userID)
+	user, err := s.userRepo.GetUserByID(userID)
 	if err != nil {
 		return err
 	}
@@ -291,7 +291,7 @@ func (s *UserProfileService) UpdateUserProfile(userIDStr string, req *UpdateUser
 			return err
 		}
 		user.Username = req.Username
-		if err := s.userRepo.Update(user); err != nil {
+		if err := s.userRepo.UpdateUser(user); err != nil {
 			return err
 		}
 	}

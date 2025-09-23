@@ -34,7 +34,7 @@ func NewUserRepository(db *sql.DB) (repository.UserRepository, repository.AuthRe
 	return userRepo, authRepo
 }
 
-func (r *userRepository) Create(user *entity.UserInformation) error {
+func (r *userRepository) CreateUser(user *entity.UserInformation) error {
 	query := `
         INSERT INTO users (
             username, email, password, age, gender, is_verified,
@@ -63,7 +63,7 @@ func (r *userRepository) Create(user *entity.UserInformation) error {
 	return nil
 }
 
-func (r *userRepository) GetByEmail(email string) (*entity.UserInformation, error) {
+func (r *userRepository) GetUserByEmail(email string) (*entity.UserInformation, error) {
 	query := `
         SELECT id, username, email, password, age, gender, is_verified,
                status, last_active_at, created_at, updated_at
@@ -96,7 +96,7 @@ func (r *userRepository) GetByEmail(email string) (*entity.UserInformation, erro
 	return user, nil
 }
 
-func (r *userRepository) GetByID(id int) (*entity.UserInformation, error) {
+func (r *userRepository) GetUserByID(id int) (*entity.UserInformation, error) {
 	query := `
         SELECT id, username, email, password, age, gender, is_verified,
                status, last_active_at, created_at, updated_at
@@ -129,7 +129,7 @@ func (r *userRepository) GetByID(id int) (*entity.UserInformation, error) {
 	return user, nil
 }
 
-func (r *userRepository) Update(user *entity.UserInformation) error {
+func (r *userRepository) UpdateUser(user *entity.UserInformation) error {
 	// 使用 EntityMapper 轉換為資料庫模型
 	dbModel, err := r.entityMapper.ToDBModel(user)
 	if err != nil {
@@ -150,7 +150,7 @@ func (r *userRepository) Update(user *entity.UserInformation) error {
 	return err
 }
 
-func (r *userRepository) Delete(id int) error {
+func (r *userRepository) DeleteUser(id int) error {
 	query := "DELETE FROM users WHERE id = ?"
 	_, err := r.db.Exec(query, id)
 	return err

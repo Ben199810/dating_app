@@ -75,7 +75,7 @@ func (h *TestHandler) TestUsersById(c *gin.Context) {
 		return
 	}
 
-	user, err := h.userRepo.GetByID(id)
+	user, err := h.userRepo.GetUserByID(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
