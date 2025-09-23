@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"golang_dev_docker/domain/entity"
 	"golang_dev_docker/domain/service"
+
+	"github.com/gin-gonic/gin"
 )
 
 type UserProfileHandler struct {
@@ -21,10 +22,10 @@ func NewUserProfileHandler(userProfileService *service.UserProfileService) *User
 
 // UpdateBasicInfoRequest 更新基本資訊請求
 type UpdateBasicInfoRequest struct {
-	Age       *int                `json:"age,omitempty"`
-	Gender    *entity.Gender      `json:"gender,omitempty"`
-	Bio       *string             `json:"bio,omitempty"`
-	Interests []string            `json:"interests,omitempty"`
+	Age       *int           `json:"age,omitempty"`
+	Gender    *entity.Gender `json:"gender,omitempty"`
+	Bio       *string        `json:"bio,omitempty"`
+	Interests []string       `json:"interests,omitempty"`
 }
 
 // UpdateLocationRequest 更新位置請求
@@ -57,10 +58,21 @@ func (h *UserProfileHandler) UpdateBasicInfo(c *gin.Context) {
 		return
 	}
 
-	err = h.userProfileService.UpdateUserBasicInfo(userID, req.Age, req.Gender, req.Bio, req.Interests)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	// 分別調用不同的服務方法
+	if req.Age != nil || req.Gender != nil {
+		err = h.userProfileService.UpdateBasicInfo(userID, req.Age, req.Gender)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	if req.Bio != nil || req.Interests != nil {
+		err = h.userProfileService.UpdateProfileInfo(userID, req.Bio, req.Interests)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "基本資訊更新成功"})
@@ -139,7 +151,7 @@ func (h *UserProfileHandler) FindNearbyUsers(c *gin.Context) {
 		return
 	}
 
-	users, err := h.userProfileService.FindNearbyUsers(userID, radius, limit)
+	users, err := h.userProfileService.GetNearbyUsers(userID, float64(radius), limit)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -149,17 +161,15 @@ func (h *UserProfileHandler) FindNearbyUsers(c *gin.Context) {
 	var safeUsers []gin.H
 	for _, user := range users {
 		safeUser := gin.H{
-			"id":              user.ID,
-			"username":        user.Username,
-			"age":             user.Age,
-			"gender":          user.Gender,
-			"bio":             user.Bio,
-			"interests":       user.Interests,
-			"city":            user.City,
-			"country":         user.Country,
-			"is_verified":     user.IsVerified,
-			"profile_views":   user.ProfileViews,
-			"last_active_at":  user.LastActiveAt,
+			"id":             user.ID,
+			"username":       user.Username,
+			"age":            user.Age,
+			"gender":         user.Gender,
+			"is_verified":    user.IsVerified,
+			"profile_views":  user.ProfileViews,
+			"last_active_at": user.LastActiveAt,
+			// 注意：bio, interests, city, country 現在在 UserProfile 表中
+			// 如果需要這些資訊，需要另外查詢 UserProfile
 		}
 		safeUsers = append(safeUsers, safeUser)
 	}
@@ -197,17 +207,14 @@ func (h *UserProfileHandler) SearchUsers(c *gin.Context) {
 	var safeUsers []gin.H
 	for _, user := range users {
 		safeUser := gin.H{
-			"id":              user.ID,
-			"username":        user.Username,
-			"age":             user.Age,
-			"gender":          user.Gender,
-			"bio":             user.Bio,
-			"interests":       user.Interests,
-			"city":            user.City,
-			"country":         user.Country,
-			"is_verified":     user.IsVerified,
-			"profile_views":   user.ProfileViews,
-			"last_active_at":  user.LastActiveAt,
+			"id":             user.ID,
+			"username":       user.Username,
+			"age":            user.Age,
+			"gender":         user.Gender,
+			"is_verified":    user.IsVerified,
+			"profile_views":  user.ProfileViews,
+			"last_active_at": user.LastActiveAt,
+			// 注意：bio, interests, city, country 現在在 UserProfile 表中
 		}
 		safeUsers = append(safeUsers, safeUser)
 	}

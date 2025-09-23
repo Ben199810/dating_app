@@ -150,7 +150,7 @@ func (r *userProfileRepository) DeleteProfile(userID int) error {
 func (r *userPhotoRepository) CreatePhoto(photo *entity.UserPhoto) error {
 	query := `
 		INSERT INTO user_photos (
-			user_id, photo_url, thumbnail_url, is_primary, `+"`order`"+`,
+			user_id, photo_url, thumbnail_url, is_primary, ` + "`order`" + `,
 			status, caption, is_verified, uploaded_at, created_at, updated_at
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), NOW())
 	`
@@ -175,11 +175,11 @@ func (r *userPhotoRepository) CreatePhoto(photo *entity.UserPhoto) error {
 
 func (r *userPhotoRepository) GetPhotosByUserID(userID int) ([]*entity.UserPhoto, error) {
 	query := `
-		SELECT id, user_id, photo_url, thumbnail_url, is_primary, `+"`order`"+`,
+		SELECT id, user_id, photo_url, thumbnail_url, is_primary, ` + "`order`" + `,
 			   status, caption, is_verified, uploaded_at, created_at, updated_at
 		FROM user_photos
 		WHERE user_id = ?
-		ORDER BY `+"`order`"+` ASC, created_at ASC
+		ORDER BY ` + "`order`" + ` ASC, created_at ASC
 	`
 
 	rows, err := r.db.Query(query, userID)
@@ -207,7 +207,7 @@ func (r *userPhotoRepository) GetPhotosByUserID(userID int) ([]*entity.UserPhoto
 
 func (r *userPhotoRepository) GetPhotoByID(id int) (*entity.UserPhoto, error) {
 	query := `
-		SELECT id, user_id, photo_url, thumbnail_url, is_primary, `+"`order`"+`,
+		SELECT id, user_id, photo_url, thumbnail_url, is_primary, ` + "`order`" + `,
 			   status, caption, is_verified, uploaded_at, created_at, updated_at
 		FROM user_photos
 		WHERE id = ?
@@ -233,7 +233,7 @@ func (r *userPhotoRepository) GetPhotoByID(id int) (*entity.UserPhoto, error) {
 func (r *userPhotoRepository) UpdatePhoto(photo *entity.UserPhoto) error {
 	query := `
 		UPDATE user_photos SET
-			photo_url = ?, thumbnail_url = ?, is_primary = ?, `+"`order`"+` = ?,
+			photo_url = ?, thumbnail_url = ?, is_primary = ?, ` + "`order`" + ` = ?,
 			status = ?, caption = ?, is_verified = ?, updated_at = NOW()
 		WHERE id = ?
 	`
@@ -276,7 +276,7 @@ func (r *userPhotoRepository) SetPrimaryPhoto(userID, photoID int) error {
 
 func (r *userPhotoRepository) GetPrimaryPhoto(userID int) (*entity.UserPhoto, error) {
 	query := `
-		SELECT id, user_id, photo_url, thumbnail_url, is_primary, `+"`order`"+`,
+		SELECT id, user_id, photo_url, thumbnail_url, is_primary, ` + "`order`" + `,
 			   status, caption, is_verified, uploaded_at, created_at, updated_at
 		FROM user_photos
 		WHERE user_id = ? AND is_primary = TRUE

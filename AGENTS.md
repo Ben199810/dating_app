@@ -1,6 +1,6 @@
 # 本機電腦啟動開發環境
 
-參考 `DEVELOP.md` 文件中的說明來在本機電腦上啟動 Docker 開發環境。
+參考 `LOCAL_DEVELOP.md` 文件中的說明來在本機電腦上啟動 Docker 開發環境。
 
 # 專案編碼風格與規範
 
@@ -54,30 +54,7 @@
 
 # 技術
 
-使用 DDD 事件驅動設計 (Domain-Driven Design) 架構來組織程式碼。
-
-## 前端
-
-```
-.
-├── static
-│   ├── css              # CSS 檔案
-│   ├── html             # HTML 檔案
-│   └── js               # JavaScript 檔案
-```
-
-## 後端
-
-```
-.
-├── config               # 配置相關
-├── domain               # 領域模型
-├── infrastructure       # 基礎設施層
-├── server               # 伺服器
-├── main.go             # 應用程式入口
-├── router.go           # 路由定義
-└── ...
-```
+參考 `TECHNOLOGIES.md` 文件中的技術棧與工具說明。
 
 # 更多等待實作功能
 

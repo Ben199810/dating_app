@@ -67,7 +67,7 @@ func (s *UserService) CreateUser(req *CreateUserRequest) (*entity.UserInformatio
 		IsVerified:   false,
 		Status:       entity.UserStatusActive,
 		ProfileViews: 0,
-		Interests:    entity.StringArray{}, // 初始化為空陣列
+		// 移除 Interests，因為它現在在 UserProfile 中
 	}
 
 	// 儲存到資料庫

@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"golang_dev_docker/domain/entity"
 	"golang_dev_docker/domain/repository"
+
+	"github.com/gin-gonic/gin"
 )
 
 type TestHandler struct {
@@ -23,7 +24,7 @@ func NewTestHandler(userRepo repository.UserRepository) *TestHandler {
 func (h *TestHandler) TestUsersByGender(c *gin.Context) {
 	gender := c.Param("gender")
 	limitStr := c.DefaultQuery("limit", "10")
-	
+
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "無效的 limit 參數"})
@@ -54,9 +55,7 @@ func (h *TestHandler) TestUsersByGender(c *gin.Context) {
 			"username": user.Username,
 			"age":      user.Age,
 			"gender":   user.Gender,
-			"bio":      user.Bio,
-			"city":     user.City,
-			"country":  user.Country,
+			// 移除 bio, city, country，因為這些欄位現在在 UserProfile 中
 		}
 		safeUsers = append(safeUsers, safeUser)
 	}
@@ -94,17 +93,13 @@ func (h *TestHandler) TestUsersById(c *gin.Context) {
 		"email":         user.Email,
 		"age":           user.Age,
 		"gender":        user.Gender,
-		"bio":           user.Bio,
-		"interests":     user.Interests,
-		"location_lat":  user.LocationLat,
-		"location_lng":  user.LocationLng,
-		"city":          user.City,
-		"country":       user.Country,
 		"is_verified":   user.IsVerified,
 		"status":        user.Status,
 		"profile_views": user.ProfileViews,
 		"created_at":    user.CreatedAt,
 		"updated_at":    user.UpdatedAt,
+		// 移除 bio, interests, location_lat, location_lng, city, country
+		// 這些欄位現在在 UserProfile 中
 	}
 
 	c.JSON(http.StatusOK, safeUser)

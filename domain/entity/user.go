@@ -65,48 +65,48 @@ func (sa StringArray) Remove(item string) StringArray {
 
 // UserInformation 完整的用戶資訊結構體
 type UserInformation struct {
-	ID            int         `json:"id"`
-	Username      string      `json:"username"`
-	Email         string      `json:"email"`
-	Password      string      `json:"-"` // 不序列化密碼
-	Age           *int        `json:"age,omitempty"`
-	Gender        *Gender     `json:"gender,omitempty"`
-	Bio           *string     `json:"bio,omitempty"`
-	Interests     StringArray `json:"interests,omitempty"`
-	LocationLat   *float64    `json:"location_lat,omitempty"`
-	LocationLng   *float64    `json:"location_lng,omitempty"`
-	City          *string     `json:"city,omitempty"`
-	Country       *string     `json:"country,omitempty"`
-	IsVerified    bool        `json:"is_verified"`
-	Status        UserStatus  `json:"status"`
-	LastActiveAt  *time.Time  `json:"last_active_at,omitempty"`
-	ProfileViews  int         `json:"profile_views"`
-	CreatedAt     time.Time   `json:"created_at"`
-	UpdatedAt     time.Time   `json:"updated_at"`
+	ID           int        `json:"id"`
+	Username     string     `json:"username"`
+	Email        string     `json:"email"`
+	Password     string     `json:"-"` // 不序列化密碼
+	Age          *int       `json:"age,omitempty"`
+	Gender       *Gender    `json:"gender,omitempty"`
+	IsVerified   bool       `json:"is_verified"`
+	Status       UserStatus `json:"status"`
+	LastActiveAt *time.Time `json:"last_active_at,omitempty"`
+	ProfileViews int        `json:"profile_views"`
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at"`
 }
 
 // UserProfile 詳細的用戶個人檔案資訊
 type UserProfile struct {
 	ID              int         `json:"id"`
 	UserID          int         `json:"user_id"`
-	Height          *int        `json:"height,omitempty"`        // 身高 (cm)
-	Weight          *int        `json:"weight,omitempty"`        // 體重 (kg)
-	Education       *string     `json:"education,omitempty"`  // 教育背景
-	Occupation      *string     `json:"occupation,omitempty"` // 職業
-	Company         *string     `json:"company,omitempty"`      // 公司
-	Relationship    *string     `json:"relationship,omitempty"` // 感情狀態
-	LookingFor      StringArray `json:"looking_for,omitempty"`    // 尋找什麼關係
-	Languages       StringArray `json:"languages,omitempty"`       // 語言能力
+	Bio             *string     `json:"bio,omitempty"`               // 自我介紹
+	Interests       StringArray `json:"interests,omitempty"`         // 興趣列表
+	LocationLat     *float64    `json:"location_lat,omitempty"`      // 地理位置-緯度
+	LocationLng     *float64    `json:"location_lng,omitempty"`      // 地理位置-經度
+	City            *string     `json:"city,omitempty"`              // 城市
+	Country         *string     `json:"country,omitempty"`           // 國家
+	Height          *int        `json:"height,omitempty"`            // 身高 (cm)
+	Weight          *int        `json:"weight,omitempty"`            // 體重 (kg)
+	Education       *string     `json:"education,omitempty"`         // 教育背景
+	Occupation      *string     `json:"occupation,omitempty"`        // 職業
+	Company         *string     `json:"company,omitempty"`           // 公司
+	Relationship    *string     `json:"relationship,omitempty"`      // 感情狀態
+	LookingFor      StringArray `json:"looking_for,omitempty"`       // 尋找什麼關係
+	Languages       StringArray `json:"languages,omitempty"`         // 語言能力
 	Hobbies         StringArray `json:"hobbies,omitempty"`           // 興趣愛好
-	Lifestyle       StringArray `json:"lifestyle,omitempty"`       // 生活方式
-	PetPreference   *string     `json:"pet_preference,omitempty"` // 寵物偏好
-	DrinkingHabit   *string     `json:"drinking_habit,omitempty"` // 飲酒習慣
-	SmokingHabit    *string     `json:"smoking_habit,omitempty"`   // 吸菸習慣
-	ExerciseHabit   *string     `json:"exercise_habit,omitempty"` // 運動習慣
+	Lifestyle       StringArray `json:"lifestyle,omitempty"`         // 生活方式
+	PetPreference   *string     `json:"pet_preference,omitempty"`    // 寵物偏好
+	DrinkingHabit   *string     `json:"drinking_habit,omitempty"`    // 飲酒習慣
+	SmokingHabit    *string     `json:"smoking_habit,omitempty"`     // 吸菸習慣
+	ExerciseHabit   *string     `json:"exercise_habit,omitempty"`    // 運動習慣
 	SocialMediaLink *string     `json:"social_media_link,omitempty"` // 社群媒體連結
-	PersonalityType *string     `json:"personality_type,omitempty"`   // 人格類型
-	Zodiac          *string     `json:"zodiac,omitempty"`                      // 星座
-	Religion        *string     `json:"religion,omitempty"`                  // 宗教信仰
+	PersonalityType *string     `json:"personality_type,omitempty"`  // 人格類型
+	Zodiac          *string     `json:"zodiac,omitempty"`            // 星座
+	Religion        *string     `json:"religion,omitempty"`          // 宗教信仰
 	CreatedAt       time.Time   `json:"created_at"`
 	UpdatedAt       time.Time   `json:"updated_at"`
 }
@@ -122,37 +122,37 @@ const (
 
 // UserPhoto 用戶照片管理
 type UserPhoto struct {
-	ID          int         `json:"id"`
-	UserID      int         `json:"user_id"`
-	PhotoURL    string      `json:"photo_url"`
-	ThumbnailURL *string    `json:"thumbnail_url,omitempty"`
-	IsPrimary   bool        `json:"is_primary"`
-	Order       int         `json:"order"`        // 照片排序
-	Status      PhotoStatus `json:"status"`
-	Caption     *string     `json:"caption,omitempty"` // 照片說明
-	IsVerified  bool        `json:"is_verified"`   // 是否為認證照片
-	UploadedAt  time.Time   `json:"uploaded_at"`
-	CreatedAt   time.Time   `json:"created_at"`
-	UpdatedAt   time.Time   `json:"updated_at"`
+	ID           int         `json:"id"`
+	UserID       int         `json:"user_id"`
+	PhotoURL     string      `json:"photo_url"`
+	ThumbnailURL *string     `json:"thumbnail_url,omitempty"`
+	IsPrimary    bool        `json:"is_primary"`
+	Order        int         `json:"order"` // 照片排序
+	Status       PhotoStatus `json:"status"`
+	Caption      *string     `json:"caption,omitempty"` // 照片說明
+	IsVerified   bool        `json:"is_verified"`       // 是否為認證照片
+	UploadedAt   time.Time   `json:"uploaded_at"`
+	CreatedAt    time.Time   `json:"created_at"`
+	UpdatedAt    time.Time   `json:"updated_at"`
 }
 
 // UserPreference 用戶配對偏好設定
 type UserPreference struct {
-	ID             int         `json:"id"`
-	UserID         int         `json:"user_id"`
-	PreferredGender *Gender    `json:"preferred_gender,omitempty"`
-	AgeMin         *int        `json:"age_min,omitempty"`
-	AgeMax         *int        `json:"age_max,omitempty"`
-	DistanceMax    *int        `json:"distance_max,omitempty"` // 最大距離 (km)
-	HeightMin      *int        `json:"height_min,omitempty"`
-	HeightMax      *int        `json:"height_max,omitempty"`
-	Education      StringArray `json:"education,omitempty"`
-	Interests      StringArray `json:"interests,omitempty"`
-	Lifestyle      StringArray `json:"lifestyle,omitempty"`
-	ShowMe         bool        `json:"show_me"`               // 是否顯示我的資料給別人
-	ShowDistance   bool        `json:"show_distance"`   // 是否顯示距離
-	ShowAge        bool        `json:"show_age"`             // 是否顯示年齡
-	ShowLastActive bool        `json:"show_last_active"` // 是否顯示最後上線時間
-	CreatedAt      time.Time   `json:"created_at"`
-	UpdatedAt      time.Time   `json:"updated_at"`
+	ID              int         `json:"id"`
+	UserID          int         `json:"user_id"`
+	PreferredGender *Gender     `json:"preferred_gender,omitempty"`
+	AgeMin          *int        `json:"age_min,omitempty"`
+	AgeMax          *int        `json:"age_max,omitempty"`
+	DistanceMax     *int        `json:"distance_max,omitempty"` // 最大距離 (km)
+	HeightMin       *int        `json:"height_min,omitempty"`
+	HeightMax       *int        `json:"height_max,omitempty"`
+	Education       StringArray `json:"education,omitempty"`
+	Interests       StringArray `json:"interests,omitempty"`
+	Lifestyle       StringArray `json:"lifestyle,omitempty"`
+	ShowMe          bool        `json:"show_me"`          // 是否顯示我的資料給別人
+	ShowDistance    bool        `json:"show_distance"`    // 是否顯示距離
+	ShowAge         bool        `json:"show_age"`         // 是否顯示年齡
+	ShowLastActive  bool        `json:"show_last_active"` // 是否顯示最後上線時間
+	CreatedAt       time.Time   `json:"created_at"`
+	UpdatedAt       time.Time   `json:"updated_at"`
 }

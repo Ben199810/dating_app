@@ -10,12 +10,12 @@ import (
 
 // UpdateUserProfileRequest 更新用戶個人資料請求
 type UpdateUserProfileRequest struct {
-	Username string          `json:"username"`
-	Age      *int            `json:"age"`
-	Gender   *entity.Gender  `json:"gender"`
-	Country  string          `json:"country"`
-	City     string          `json:"city"`
-	Bio      *string         `json:"bio"`
+	Username string         `json:"username"`
+	Age      *int           `json:"age"`
+	Gender   *entity.Gender `json:"gender"`
+	Country  string         `json:"country"`
+	City     string         `json:"city"`
+	Bio      *string        `json:"bio"`
 }
 
 type UserProfileService struct {
@@ -39,70 +39,104 @@ func NewUserProfileService(
 	}
 }
 
-// UpdateUserBasicInfo 更新用戶基本資訊
-func (s *UserProfileService) UpdateUserBasicInfo(userID int, age *int, gender *entity.Gender, bio *string, interests []string) error {
-	// 驗證輸入
-	if err := validator.ValidateAge(age); err != nil {
-		return err
+// UpdateBasicInfo 更新用戶基本資訊（現在只包含核心身份資訊）
+func (s *UserProfileService) UpdateBasicInfo(userID int, age *int, gender *entity.Gender) error {
+	// 驗證資料
+	if age != nil {
+		if err := validator.ValidateAge(age); err != nil {
+			return err
+		}
 	}
 
-	genderStr := ""
 	if gender != nil {
-		genderStr = string(*gender)
-	}
-	if err := validator.ValidateGender(&genderStr); err != nil {
-		return err
+		genderStr := string(*gender)
+		if err := validator.ValidateGender(&genderStr); err != nil {
+			return err
+		}
 	}
 
-	if err := validator.ValidateBio(bio); err != nil {
+	// 取得用戶現有資訊
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
 		return err
+	}
+	if user == nil {
+		return errors.New("用戶不存在")
+	}
+
+	// 更新基本資訊
+	user.Age = age
+	user.Gender = gender
+
+	return s.userRepo.Update(user)
+}
+
+// UpdateProfileInfo 更新用戶檔案資訊（bio、interests 等）
+func (s *UserProfileService) UpdateProfileInfo(userID int, bio *string, interests []string) error {
+	// 驗證資料
+	if bio != nil {
+		if err := validator.ValidateBio(bio); err != nil {
+			return err
+		}
 	}
 
 	if err := validator.ValidateInterests(interests); err != nil {
 		return err
 	}
 
-	// 取得用戶現有資訊
-	user, err := s.userRepo.GetByID(userID)
+	// 取得或創建 UserProfile
+	profile, err := s.userProfileRepo.GetProfileByUserID(userID)
 	if err != nil {
 		return err
 	}
-	if user == nil {
-		return errors.New("用戶不存在")
+
+	if profile == nil {
+		// 創建新的 UserProfile
+		profile = &entity.UserProfile{
+			UserID:    userID,
+			Bio:       bio,
+			Interests: entity.StringArray(interests),
+		}
+		return s.userProfileRepo.CreateProfile(profile)
+	} else {
+		// 更新現有的 UserProfile
+		profile.Bio = bio
+		profile.Interests = entity.StringArray(interests)
+		return s.userProfileRepo.UpdateProfile(profile)
 	}
-
-	// 更新資訊
-	user.Age = age
-	user.Gender = gender
-	user.Bio = bio
-	user.Interests = entity.StringArray(interests)
-
-	return s.userRepo.Update(user)
 }
 
-// UpdateUserLocation 更新用戶位置
+// UpdateUserLocation 更新用戶位置資訊（現在屬於 UserProfile）
 func (s *UserProfileService) UpdateUserLocation(userID int, lat, lng *float64, city, country *string) error {
 	// 驗證位置
 	if err := validator.ValidateLocation(lat, lng); err != nil {
 		return err
 	}
 
-	// 取得用戶現有資訊
-	user, err := s.userRepo.GetByID(userID)
+	// 取得或創建 UserProfile
+	profile, err := s.userProfileRepo.GetProfileByUserID(userID)
 	if err != nil {
 		return err
 	}
-	if user == nil {
-		return errors.New("用戶不存在")
+
+	if profile == nil {
+		// 創建新的 UserProfile
+		profile = &entity.UserProfile{
+			UserID:      userID,
+			LocationLat: lat,
+			LocationLng: lng,
+			City:        city,
+			Country:     country,
+		}
+		return s.userProfileRepo.CreateProfile(profile)
+	} else {
+		// 更新現有的 UserProfile
+		profile.LocationLat = lat
+		profile.LocationLng = lng
+		profile.City = city
+		profile.Country = country
+		return s.userProfileRepo.UpdateProfile(profile)
 	}
-
-	// 更新位置資訊
-	user.LocationLat = lat
-	user.LocationLng = lng
-	user.City = city
-	user.Country = country
-
-	return s.userRepo.Update(user)
 }
 
 // AddUserPhoto 新增用戶照片
@@ -156,9 +190,9 @@ func (s *UserProfileService) CreateUserProfile(userID int, profile *entity.UserP
 	return s.userProfileRepo.CreateProfile(profile)
 }
 
-// FindNearbyUsers 尋找附近用戶
-func (s *UserProfileService) FindNearbyUsers(userID int, radiusKm int, limit int) ([]*entity.UserInformation, error) {
-	// 取得當前用戶位置
+// GetNearbyUsers 取得附近的用戶
+func (s *UserProfileService) GetNearbyUsers(userID int, radiusKm float64, limit int) ([]*entity.UserInformation, error) {
+	// 取得用戶資訊
 	user, err := s.userRepo.GetByID(userID)
 	if err != nil {
 		return nil, err
@@ -167,7 +201,12 @@ func (s *UserProfileService) FindNearbyUsers(userID int, radiusKm int, limit int
 		return nil, errors.New("用戶不存在")
 	}
 
-	if user.LocationLat == nil || user.LocationLng == nil {
+	// 取得用戶的 Profile（包含位置資訊）
+	profile, err := s.userProfileRepo.GetProfileByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	if profile == nil || profile.LocationLat == nil || profile.LocationLng == nil {
 		return nil, errors.New("用戶未設定位置")
 	}
 
@@ -175,7 +214,7 @@ func (s *UserProfileService) FindNearbyUsers(userID int, radiusKm int, limit int
 	s.userRepo.UpdateLastActiveTime(userID)
 
 	// 搜尋附近用戶
-	return s.userRepo.GetUsersByLocation(*user.LocationLat, *user.LocationLng, radiusKm, limit)
+	return s.userRepo.GetUsersByLocation(*profile.LocationLat, *profile.LocationLng, int(radiusKm), limit)
 }
 
 // SearchCompatibleUsers 搜尋相容的用戶
@@ -246,32 +285,43 @@ func (s *UserProfileService) UpdateUserProfile(userIDStr string, req *UpdateUser
 		return errors.New("用戶不存在")
 	}
 
-	// 更新用戶基本資訊
+	// 更新用戶基本資訊（核心身份）
 	if req.Username != "" {
 		if err := validator.ValidateUsername(req.Username); err != nil {
 			return err
 		}
 		user.Username = req.Username
-	}
-
-	if req.Country != "" {
-		user.Country = &req.Country
-	}
-
-	if req.City != "" {
-		user.City = &req.City
-	}
-
-	// 更新額外的個人資料欄位
-	if req.Age != nil || req.Gender != nil || req.Bio != nil {
-		if err := s.UpdateUserBasicInfo(userID, req.Age, req.Gender, req.Bio, nil); err != nil {
+		if err := s.userRepo.Update(user); err != nil {
 			return err
 		}
 	}
 
-	// 更新用戶基本資訊
-	if err := s.userRepo.Update(user); err != nil {
-		return err
+	// 更新基本身份資訊（年齡、性別）
+	if req.Age != nil || req.Gender != nil {
+		if err := s.UpdateBasicInfo(userID, req.Age, req.Gender); err != nil {
+			return err
+		}
+	}
+
+	// 更新檔案資訊（bio、interests）
+	if req.Bio != nil {
+		if err := s.UpdateProfileInfo(userID, req.Bio, nil); err != nil {
+			return err
+		}
+	}
+
+	// 更新位置資訊（city、country）
+	if req.City != "" || req.Country != "" {
+		var city, country *string
+		if req.City != "" {
+			city = &req.City
+		}
+		if req.Country != "" {
+			country = &req.Country
+		}
+		if err := s.UpdateUserLocation(userID, nil, nil, city, country); err != nil {
+			return err
+		}
 	}
 
 	return nil

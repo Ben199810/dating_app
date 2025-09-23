@@ -6,12 +6,6 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     age INT,
     gender ENUM('male', 'female', 'other'),
-    bio TEXT,
-    interests JSON,
-    location_lat DECIMAL(10,8),
-    location_lng DECIMAL(11,8),
-    city VARCHAR(100),
-    country VARCHAR(100),
     is_verified BOOLEAN DEFAULT FALSE,
     status ENUM('active', 'inactive', 'banned') DEFAULT 'active',
     last_active_at TIMESTAMP NULL,
@@ -22,7 +16,6 @@ CREATE TABLE IF NOT EXISTS users (
     INDEX idx_email (email),
     INDEX idx_gender (gender),
     INDEX idx_age (age),
-    INDEX idx_location (location_lat, location_lng),
     INDEX idx_status (status),
     INDEX idx_last_active_at (last_active_at)
 );
@@ -31,6 +24,12 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS user_profiles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
+    bio TEXT,
+    interests JSON,
+    location_lat DECIMAL(10,8),
+    location_lng DECIMAL(11,8),
+    city VARCHAR(100),
+    country VARCHAR(100),
     height INT,
     weight INT,
     education VARCHAR(255),
@@ -52,7 +51,10 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    UNIQUE KEY unique_user_profile (user_id)
+    UNIQUE KEY unique_user_profile (user_id),
+    INDEX idx_location (location_lat, location_lng),
+    INDEX idx_city (city),
+    INDEX idx_country (country)
 );
 
 -- 建立用戶照片表

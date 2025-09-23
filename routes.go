@@ -23,13 +23,13 @@ func RegisterRoutes(r *gin.Engine) {
 		// 基本功能
 		api.GET("/status", handler.HealthCheckHandler)        // 健康檢查端點
 		api.POST("/user/register", handler.CreateUserHandler) // 新增用戶註冊端點
-		
+
 		// 身份驗證
 		auth := api.Group("/auth")
 		{
 			auth.POST("/login", handler.LoginHandler) // 用戶登入端點
 		}
-		
+
 		// 用戶個人資料
 		user := api.Group("/user")
 		{

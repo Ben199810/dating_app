@@ -90,15 +90,15 @@ func ValidateAge(age *int) error {
 	if age == nil {
 		return nil // 年齡可以為空
 	}
-	
+
 	if *age < 18 {
 		return errors.New("年齡必須大於等於18歲")
 	}
-	
+
 	if *age > 120 {
 		return errors.New("年齡不能超過120歲")
 	}
-	
+
 	return nil
 }
 
@@ -107,14 +107,14 @@ func ValidateGender(gender *string) error {
 	if gender == nil {
 		return nil // 性別可以為空
 	}
-	
+
 	validGenders := []string{"male", "female", "other"}
 	for _, validGender := range validGenders {
 		if *gender == validGender {
 			return nil
 		}
 	}
-	
+
 	return errors.New("性別必須是 male、female 或 other")
 }
 
@@ -123,12 +123,12 @@ func ValidateBio(bio *string) error {
 	if bio == nil {
 		return nil // 自我介紹可以為空
 	}
-	
+
 	bioText := strings.TrimSpace(*bio)
 	if len(bioText) > 500 {
 		return errors.New("自我介紹不能超過500個字符")
 	}
-	
+
 	return nil
 }
 
@@ -137,7 +137,7 @@ func ValidateInterests(interests []string) error {
 	if len(interests) > 10 {
 		return errors.New("興趣不能超過10個")
 	}
-	
+
 	for _, interest := range interests {
 		interest = strings.TrimSpace(interest)
 		if len(interest) == 0 {
@@ -147,7 +147,7 @@ func ValidateInterests(interests []string) error {
 			return errors.New("每個興趣不能超過50個字符")
 		}
 	}
-	
+
 	return nil
 }
 
@@ -156,7 +156,7 @@ func ValidateLocation(lat, lng *float64) error {
 	if (lat == nil && lng != nil) || (lat != nil && lng == nil) {
 		return errors.New("經緯度必須同時提供或同時為空")
 	}
-	
+
 	if lat != nil && lng != nil {
 		if *lat < -90 || *lat > 90 {
 			return errors.New("緯度必須在-90到90之間")
@@ -165,7 +165,7 @@ func ValidateLocation(lat, lng *float64) error {
 			return errors.New("經度必須在-180到180之間")
 		}
 	}
-	
+
 	return nil
 }
 
@@ -174,11 +174,11 @@ func ValidateHeight(height *int) error {
 	if height == nil {
 		return nil
 	}
-	
+
 	if *height < 100 || *height > 250 {
 		return errors.New("身高必須在100-250公分之間")
 	}
-	
+
 	return nil
 }
 
@@ -187,11 +187,11 @@ func ValidateWeight(weight *int) error {
 	if weight == nil {
 		return nil
 	}
-	
+
 	if *weight < 30 || *weight > 300 {
 		return errors.New("體重必須在30-300公斤之間")
 	}
-	
+
 	return nil
 }
 
@@ -201,13 +201,13 @@ func ValidatePhotoURL(url string) error {
 	if url == "" {
 		return errors.New("照片URL不能為空")
 	}
-	
+
 	// 基本URL格式驗證
 	urlRegex := regexp.MustCompile(`^https?://.*\.(jpg|jpeg|png|gif|webp)$`)
 	if !urlRegex.MatchString(strings.ToLower(url)) {
 		return errors.New("照片URL格式不正確，必須是有效的圖片連結")
 	}
-	
+
 	return nil
 }
 
@@ -216,23 +216,23 @@ func ValidateProfileData(age *int, gender *string, bio *string, interests []stri
 	if err := ValidateAge(age); err != nil {
 		return err
 	}
-	
+
 	if err := ValidateGender(gender); err != nil {
 		return err
 	}
-	
+
 	if err := ValidateBio(bio); err != nil {
 		return err
 	}
-	
+
 	if err := ValidateInterests(interests); err != nil {
 		return err
 	}
-	
+
 	if err := ValidateLocation(lat, lng); err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -249,7 +249,7 @@ func ValidateAgeRange(minAge, maxAge *int) error {
 			return errors.New("最大年齡不能超過120歲")
 		}
 	}
-	
+
 	return nil
 }
 
@@ -258,10 +258,10 @@ func ValidateDistance(distance *int) error {
 	if distance == nil {
 		return nil
 	}
-	
+
 	if *distance < 1 || *distance > 500 {
 		return errors.New("距離範圍必須在1-500公里之間")
 	}
-	
+
 	return nil
 }
