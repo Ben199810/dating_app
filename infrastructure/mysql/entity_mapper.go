@@ -63,9 +63,8 @@ type UserDBModel struct {
 	IsVerified   bool    `db:"is_verified"`
 	Status       string  `db:"status"`
 	LastActiveAt *string `db:"last_active_at"` // 使用 string 處理時間
-	ProfileViews int     `db:"profile_views"`
-	CreatedAt    string  `db:"created_at"` // 使用 string 處理時間
-	UpdatedAt    string  `db:"updated_at"` // 使用 string 處理時間
+	CreatedAt    string  `db:"created_at"`     // 使用 string 處理時間
+	UpdatedAt    string  `db:"updated_at"`     // 使用 string 處理時間
 }
 
 // ToEntity 將資料庫模型轉換為領域實體
@@ -82,15 +81,14 @@ func (m *UserEntityMapper) ToEntity(dbModel *UserDBModel) (*entity.UserInformati
 
 	// 這裡可以添加時間轉換邏輯，暫時使用基本轉換
 	user := &entity.UserInformation{
-		ID:           dbModel.ID,
-		Username:     dbModel.Username,
-		Email:        dbModel.Email,
-		Password:     dbModel.Password,
-		Age:          dbModel.Age,
-		Gender:       gender,
-		IsVerified:   dbModel.IsVerified,
-		Status:       status,
-		ProfileViews: dbModel.ProfileViews,
+		ID:         dbModel.ID,
+		Username:   dbModel.Username,
+		Email:      dbModel.Email,
+		Password:   dbModel.Password,
+		Age:        dbModel.Age,
+		Gender:     gender,
+		IsVerified: dbModel.IsVerified,
+		Status:     status,
 		// 時間欄位需要額外的轉換邏輯
 	}
 
@@ -110,15 +108,14 @@ func (m *UserEntityMapper) ToDBModel(user *entity.UserInformation) (*UserDBModel
 	status := string(user.Status)
 
 	dbModel := &UserDBModel{
-		ID:           user.ID,
-		Username:     user.Username,
-		Email:        user.Email,
-		Password:     user.Password,
-		Age:          user.Age,
-		Gender:       gender,
-		IsVerified:   user.IsVerified,
-		Status:       status,
-		ProfileViews: user.ProfileViews,
+		ID:         user.ID,
+		Username:   user.Username,
+		Email:      user.Email,
+		Password:   user.Password,
+		Age:        user.Age,
+		Gender:     gender,
+		IsVerified: user.IsVerified,
+		Status:     status,
 		// 時間欄位需要額外的轉換邏輯
 	}
 
@@ -140,7 +137,6 @@ func (m *UserEntityMapper) PrepareForInsert(user *entity.UserInformation) ([]int
 		dbModel.Gender,
 		dbModel.IsVerified,
 		dbModel.Status,
-		dbModel.ProfileViews,
 	}, nil
 }
 

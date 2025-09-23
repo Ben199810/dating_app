@@ -38,8 +38,8 @@ func (r *userRepository) Create(user *entity.UserInformation) error {
 	query := `
         INSERT INTO users (
             username, email, password, age, gender, is_verified,
-            status, profile_views, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            status, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
     `
 
 	// 使用 EntityMapper 準備插入資料
@@ -66,7 +66,7 @@ func (r *userRepository) Create(user *entity.UserInformation) error {
 func (r *userRepository) GetByEmail(email string) (*entity.UserInformation, error) {
 	query := `
         SELECT id, username, email, password, age, gender, is_verified,
-               status, last_active_at, profile_views, created_at, updated_at
+               status, last_active_at, created_at, updated_at
         FROM users 
         WHERE email = ?
     `
@@ -76,7 +76,7 @@ func (r *userRepository) GetByEmail(email string) (*entity.UserInformation, erro
 	err := r.db.QueryRow(query, email).Scan(
 		&dbModel.ID, &dbModel.Username, &dbModel.Email, &dbModel.Password,
 		&dbModel.Age, &dbModel.Gender,
-		&dbModel.IsVerified, &dbModel.Status, &dbModel.LastActiveAt, &dbModel.ProfileViews,
+		&dbModel.IsVerified, &dbModel.Status, &dbModel.LastActiveAt,
 		&dbModel.CreatedAt, &dbModel.UpdatedAt,
 	)
 
@@ -99,7 +99,7 @@ func (r *userRepository) GetByEmail(email string) (*entity.UserInformation, erro
 func (r *userRepository) GetByID(id int) (*entity.UserInformation, error) {
 	query := `
         SELECT id, username, email, password, age, gender, is_verified,
-               status, last_active_at, profile_views, created_at, updated_at
+               status, last_active_at, created_at, updated_at
         FROM users 
         WHERE id = ?
     `
@@ -109,7 +109,7 @@ func (r *userRepository) GetByID(id int) (*entity.UserInformation, error) {
 	err := r.db.QueryRow(query, id).Scan(
 		&dbModel.ID, &dbModel.Username, &dbModel.Email, &dbModel.Password,
 		&dbModel.Age, &dbModel.Gender,
-		&dbModel.IsVerified, &dbModel.Status, &dbModel.LastActiveAt, &dbModel.ProfileViews,
+		&dbModel.IsVerified, &dbModel.Status, &dbModel.LastActiveAt,
 		&dbModel.CreatedAt, &dbModel.UpdatedAt,
 	)
 
@@ -243,7 +243,7 @@ func (r *userRepository) GetUsersByLocation(lat, lng float64, radiusKm int, limi
 	// 使用 Haversine 公式計算距離
 	query := `
 		SELECT id, username, email, age, gender, is_verified,
-			   status, last_active_at, profile_views, created_at, updated_at
+			   status, last_active_at, created_at, updated_at
 		FROM users 
 		WHERE id IN (
 			SELECT DISTINCT up.user_id 
@@ -272,7 +272,7 @@ func (r *userRepository) GetUsersByLocation(lat, lng float64, radiusKm int, limi
 		err := rows.Scan(
 			&dbModel.ID, &dbModel.Username, &dbModel.Email, &dbModel.Age, &dbModel.Gender,
 			&dbModel.IsVerified, &dbModel.Status,
-			&dbModel.LastActiveAt, &dbModel.ProfileViews, &dbModel.CreatedAt, &dbModel.UpdatedAt,
+			&dbModel.LastActiveAt, &dbModel.CreatedAt, &dbModel.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -293,7 +293,7 @@ func (r *userRepository) GetUsersByLocation(lat, lng float64, radiusKm int, limi
 func (r *userRepository) GetUsersByAgeRange(minAge, maxAge int, limit int) ([]*entity.UserInformation, error) {
 	query := `
 		SELECT id, username, email, age, gender, is_verified,
-			   status, last_active_at, profile_views, created_at, updated_at
+			   status, last_active_at, created_at, updated_at
 		FROM users 
 		WHERE age BETWEEN ? AND ?
 		  AND status = 'active'
@@ -314,7 +314,7 @@ func (r *userRepository) GetUsersByAgeRange(minAge, maxAge int, limit int) ([]*e
 		err := rows.Scan(
 			&dbModel.ID, &dbModel.Username, &dbModel.Email, &dbModel.Age, &dbModel.Gender,
 			&dbModel.IsVerified, &dbModel.Status,
-			&dbModel.LastActiveAt, &dbModel.ProfileViews, &dbModel.CreatedAt, &dbModel.UpdatedAt,
+			&dbModel.LastActiveAt, &dbModel.CreatedAt, &dbModel.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -335,7 +335,7 @@ func (r *userRepository) GetUsersByAgeRange(minAge, maxAge int, limit int) ([]*e
 func (r *userRepository) GetUsersByGender(gender entity.Gender, limit int) ([]*entity.UserInformation, error) {
 	query := `
 		SELECT id, username, email, age, gender, is_verified,
-			   status, last_active_at, profile_views, created_at, updated_at
+			   status, last_active_at, created_at, updated_at
 		FROM users 
 		WHERE gender = ?
 		  AND status = 'active'
@@ -356,7 +356,7 @@ func (r *userRepository) GetUsersByGender(gender entity.Gender, limit int) ([]*e
 		err := rows.Scan(
 			&dbModel.ID, &dbModel.Username, &dbModel.Email, &dbModel.Age, &dbModel.Gender,
 			&dbModel.IsVerified, &dbModel.Status,
-			&dbModel.LastActiveAt, &dbModel.ProfileViews, &dbModel.CreatedAt, &dbModel.UpdatedAt,
+			&dbModel.LastActiveAt, &dbModel.CreatedAt, &dbModel.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -388,7 +388,7 @@ func (r *userRepository) UpdateLastActiveTime(userID int) error {
 func (r *userRepository) SearchUsers(filters map[string]interface{}, limit, offset int) ([]*entity.UserInformation, error) {
 	baseQuery := `
 		SELECT id, username, email, age, gender, is_verified,
-			   status, last_active_at, profile_views, created_at, updated_at
+			   status, last_active_at, created_at, updated_at
 		FROM users 
 		WHERE status = 'active'
 	`
@@ -437,7 +437,7 @@ func (r *userRepository) SearchUsers(filters map[string]interface{}, limit, offs
 		err := rows.Scan(
 			&dbModel.ID, &dbModel.Username, &dbModel.Email, &dbModel.Age, &dbModel.Gender,
 			&dbModel.IsVerified, &dbModel.Status,
-			&dbModel.LastActiveAt, &dbModel.ProfileViews, &dbModel.CreatedAt, &dbModel.UpdatedAt,
+			&dbModel.LastActiveAt, &dbModel.CreatedAt, &dbModel.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err

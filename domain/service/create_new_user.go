@@ -61,12 +61,11 @@ func (s *UserService) CreateUser(req *CreateUserRequest) (*entity.UserInformatio
 
 	// 建立用戶
 	user := &entity.UserInformation{
-		Username:     strings.TrimSpace(req.Username),
-		Email:        strings.TrimSpace(req.Email),
-		Password:     string(hashedPassword),
-		IsVerified:   false,
-		Status:       entity.UserStatusActive,
-		ProfileViews: 0,
+		Username:   strings.TrimSpace(req.Username),
+		Email:      strings.TrimSpace(req.Email),
+		Password:   string(hashedPassword),
+		IsVerified: false,
+		Status:     entity.UserStatusActive,
 		// 移除 Interests，因為它現在在 UserProfile 中
 	}
 

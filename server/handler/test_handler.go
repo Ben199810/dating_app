@@ -88,16 +88,15 @@ func (h *TestHandler) TestUsersById(c *gin.Context) {
 
 	// 過濾敏感資訊
 	safeUser := gin.H{
-		"id":            user.ID,
-		"username":      user.Username,
-		"email":         user.Email,
-		"age":           user.Age,
-		"gender":        user.Gender,
-		"is_verified":   user.IsVerified,
-		"status":        user.Status,
-		"profile_views": user.ProfileViews,
-		"created_at":    user.CreatedAt,
-		"updated_at":    user.UpdatedAt,
+		"id":          user.ID,
+		"username":    user.Username,
+		"email":       user.Email,
+		"age":         user.Age,
+		"gender":      user.Gender,
+		"is_verified": user.IsVerified,
+		"status":      user.Status,
+		"created_at":  user.CreatedAt,
+		"updated_at":  user.UpdatedAt,
 		// 移除 bio, interests, location_lat, location_lng, city, country
 		// 這些欄位現在在 UserProfile 中
 	}

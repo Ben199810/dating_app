@@ -13,7 +13,6 @@
 - ✅ 帳號驗證狀態 (is_verified)
 - ✅ 用戶狀態 (status: active/inactive/banned)
 - ✅ 最後活躍時間 (last_active_at)
-- ✅ 個人檔案瀏覽次數 (profile_views)
 
 ### 2. 詳細個人檔案 (`UserProfile`)
 
@@ -21,7 +20,6 @@
 - ✅ 興趣列表 (interests - JSON 陣列)
 - ✅ 地理位置 (location_lat, location_lng)
 - ✅ 城市/國家 (city, country)
-
 - ✅ 身高體重 (height, weight)
 - ✅ 教育背景 (education)
 - ✅ 職業資訊 (occupation, company)

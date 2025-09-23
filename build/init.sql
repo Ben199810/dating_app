@@ -7,9 +7,12 @@ CREATE TABLE IF NOT EXISTS users (
     age INT,
     gender ENUM('male', 'female', 'other'),
     is_verified BOOLEAN DEFAULT FALSE,
-    status ENUM('active', 'inactive', 'banned') DEFAULT 'active',
+    status ENUM(
+        'active',
+        'inactive',
+        'banned'
+    ) DEFAULT 'active',
     last_active_at TIMESTAMP NULL,
-    profile_views INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_username (username),
@@ -26,8 +29,8 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     user_id INT NOT NULL,
     bio TEXT,
     interests JSON,
-    location_lat DECIMAL(10,8),
-    location_lng DECIMAL(11,8),
+    location_lat DECIMAL(10, 8),
+    location_lng DECIMAL(11, 8),
     city VARCHAR(100),
     country VARCHAR(100),
     height INT,
@@ -65,7 +68,11 @@ CREATE TABLE IF NOT EXISTS user_photos (
     thumbnail_url VARCHAR(500),
     is_primary BOOLEAN DEFAULT FALSE,
     `order` INT DEFAULT 0,
-    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    status ENUM(
+        'pending',
+        'approved',
+        'rejected'
+    ) DEFAULT 'pending',
     caption TEXT,
     is_verified BOOLEAN DEFAULT FALSE,
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -139,11 +146,7 @@ CREATE TABLE IF NOT EXISTS user_chat_rooms (
 
 -- 插入一些示例資料
 INSERT INTO
-    users (
-        username,
-        email,
-        password
-    )
+    users (username, email, password)
 VALUES (
         'admin',
         'admin@example.com',

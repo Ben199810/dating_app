@@ -166,7 +166,6 @@ func (h *UserProfileHandler) FindNearbyUsers(c *gin.Context) {
 			"age":            user.Age,
 			"gender":         user.Gender,
 			"is_verified":    user.IsVerified,
-			"profile_views":  user.ProfileViews,
 			"last_active_at": user.LastActiveAt,
 			// 注意：bio, interests, city, country 現在在 UserProfile 表中
 			// 如果需要這些資訊，需要另外查詢 UserProfile
@@ -212,7 +211,6 @@ func (h *UserProfileHandler) SearchUsers(c *gin.Context) {
 			"age":            user.Age,
 			"gender":         user.Gender,
 			"is_verified":    user.IsVerified,
-			"profile_views":  user.ProfileViews,
 			"last_active_at": user.LastActiveAt,
 			// 注意：bio, interests, city, country 現在在 UserProfile 表中
 		}

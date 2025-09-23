@@ -74,7 +74,6 @@ type UserInformation struct {
 	IsVerified   bool       `json:"is_verified"`
 	Status       UserStatus `json:"status"`
 	LastActiveAt *time.Time `json:"last_active_at,omitempty"`
-	ProfileViews int        `json:"profile_views"`
 	CreatedAt    time.Time  `json:"created_at"`
 	UpdatedAt    time.Time  `json:"updated_at"`
 }
