@@ -8,30 +8,32 @@ services:
       - "8080:8080"
     environment:
       - APP_ENV=production # 使用 production 配置
+      - JWT_SECRET_KEY=your-super-secure-jwt-secret-key-change-in-production
+      - MIN_AGE_REQUIREMENT=18
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
     networks:
-      - chat_network
+      - dating_network
 
   # MySQL 資料庫服務
   mysql:
     image: mysql:8.0
-    container_name: chat_mysql
+    container_name: dating_mysql
     ports:
       - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: chat_app
-      MYSQL_USER: chat_user
-      MYSQL_PASSWORD: chat_password
+      MYSQL_DATABASE: dating_app
+      MYSQL_USER: dating_user
+      MYSQL_PASSWORD: dating_password
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - chat_network
+      - dating_network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s
@@ -42,14 +44,14 @@ services:
   # Redis 快取服務
   redis:
     image: redis:7-alpine
-    container_name: chat_redis
+    container_name: dating_redis
     ports:
       - "6379:6379"
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
     networks:
-      - chat_network
+      - dating_network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       timeout: 3s
@@ -60,23 +62,23 @@ services:
   # phpMyAdmin (可選，用於資料庫管理)
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
-    container_name: chat_phpmyadmin
+    container_name: dating_phpmyadmin
     ports:
       - "8081:80"
     environment:
       PMA_HOST: mysql
       PMA_PORT: 3306
-      PMA_USER: chat_user
-      PMA_PASSWORD: chat_password
+      PMA_USER: dating_user
+      PMA_PASSWORD: dating_password
     depends_on:
       - mysql
     networks:
-      - chat_network
+      - dating_network
 
 volumes:
   mysql_data:
   redis_data:
 
 networks:
-  chat_network:
+  dating_network:
     driver: bridge
