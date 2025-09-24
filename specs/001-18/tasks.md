@@ -83,15 +83,15 @@
 
 ### 領域實體模型
 
-- [ ] T018 [P] User 實體在 domain/entity/user.go
-- [ ] T019 [P] UserProfile 實體在 domain/entity/user_profile.go
-- [ ] T020 [P] Match 實體在 domain/entity/match.go
-- [ ] T021 [P] ChatMessage 實體在 domain/entity/chat_message.go
-- [ ] T022 [P] Report 實體在 domain/entity/report.go
-- [ ] T023 [P] Block 實體在 domain/entity/block.go
-- [ ] T024 [P] Interest 實體在 domain/entity/interest.go
-- [ ] T025 [P] Photo 實體在 domain/entity/photo.go
-- [ ] T026 [P] AgeVerification 實體在 domain/entity/age_verification.go
+- [x] T018 [P] User 實體在 domain/entity/user.go
+- [x] T019 [P] UserProfile 實體在 domain/entity/user_profile.go
+- [x] T020 [P] Match 實體在 domain/entity/match.go
+- [x] T021 [P] ChatMessage 實體在 domain/entity/chat_message.go
+- [x] T022 [P] Report 實體在 domain/entity/report.go
+- [x] T023 [P] Block 實體在 domain/entity/block.go
+- [x] T024 [P] Interest 實體在 domain/entity/interest.go
+- [x] T025 [P] Photo 實體在 domain/entity/photo.go
+- [x] T026 [P] AgeVerification 實體在 domain/entity/age_verification.go
 
 ### 儲存庫介面
 
