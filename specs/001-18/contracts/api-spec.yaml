@@ -1,0 +1,531 @@
+openapi: 3.0.0
+info:
+  title: 18+ Dating Chat API
+  description: Dating and chat application API for users 18+
+  version: 1.0.0
+  contact:
+    name: API Support
+
+servers:
+  - url: http://localhost:8080/api
+    description: Development environment
+  - url: https://api.dating.app
+    description: Production environment
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []
+
+paths:
+  # Authentication endpoints
+  /auth/register:
+    post:
+      summary: User registration
+      description: Register new user, must be 18+
+      tags: [Authentication]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, birth_date, display_name, gender]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  minLength: 8
+                  example: "SecurePassword123"
+                birth_date:
+                  type: string
+                  format: date
+                  description: "Birthday for age verification"
+                  example: "1995-06-15"
+                display_name:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                  example: "John"
+                gender:
+                  type: string
+                  enum: [male, female, other]
+                  example: "male"
+      responses:
+        '201':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Registration successful"
+                  user_id:
+                    type: integer
+                    example: 123
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      summary: User login
+      tags: [Authentication]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: JWT access token
+                  refresh_token:
+                    type: string
+                    description: JWT refresh token
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # User management endpoints
+  /users/profile:
+    get:
+      summary: Get current user profile
+      tags: [User Management]
+      responses:
+        '200':
+          description: Successfully retrieved profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+    put:
+      summary: Update user profile
+      tags: [User Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                display_name:
+                  type: string
+                  maxLength: 50
+                bio:
+                  type: string
+                  maxLength: 500
+                show_age:
+                  type: boolean
+                max_distance:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                age_range_min:
+                  type: integer
+                  minimum: 18
+                age_range_max:
+                  type: integer
+                  maximum: 99
+                interests:
+                  type: array
+                  items:
+                    type: integer
+                  description: Array of interest IDs
+      responses:
+        '200':
+          description: Update successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+
+  # Matching system endpoints
+  /matches/discover:
+    get:
+      summary: Discover potential matches
+      description: Get recommended users based on location, age, interests
+      tags: [Matching System]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 50
+      responses:
+        '200':
+          description: Successfully retrieved recommendations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserCard'
+                  has_more:
+                    type: boolean
+
+  /matches/like:
+    post:
+      summary: Express interest in user
+      tags: [Matching System]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [target_user_id]
+              properties:
+                target_user_id:
+                  type: integer
+                  description: Target user ID
+      responses:
+        '201':
+          description: Successfully expressed interest
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  match_id:
+                    type: integer
+                    description: Match record ID
+                  is_matched:
+                    type: boolean
+                    description: Whether mutual match occurred
+                  message:
+                    type: string
+
+  # Chat system endpoints
+  /chats:
+    get:
+      summary: Get user's chat list
+      tags: [Chat System]
+      responses:
+        '200':
+          description: Successfully retrieved chat list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chats:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        match_id:
+                          type: integer
+                        other_user:
+                          $ref: '#/components/schemas/UserCard'
+                        last_message:
+                          $ref: '#/components/schemas/ChatMessage'
+                        unread_count:
+                          type: integer
+
+  /chats/{match_id}/messages:
+    get:
+      summary: Get chat messages for a match
+      tags: [Chat System]
+      parameters:
+        - name: match_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: before
+          in: query
+          description: Get messages before specified time
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+      responses:
+        '200':
+          description: Successfully retrieved chat messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChatMessage'
+                  has_more:
+                    type: boolean
+    post:
+      summary: Send chat message
+      tags: [Chat System]
+      parameters:
+        - name: match_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                  maxLength: 1000
+                  description: Message content
+                message_type:
+                  type: string
+                  enum: [text, emoji]
+                  default: text
+      responses:
+        '201':
+          description: Message sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMessage'
+
+  # Safety features
+  /reports:
+    post:
+      summary: Report a user
+      tags: [Safety Features]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reported_user_id, report_type]
+              properties:
+                reported_user_id:
+                  type: integer
+                report_type:
+                  type: string
+                  enum: [spam, harassment, fake_profile, inappropriate, other]
+                reason:
+                  type: string
+                  maxLength: 500
+                  description: Detailed reason for report
+      responses:
+        '201':
+          description: Report submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  report_id:
+                    type: integer
+                  message:
+                    type: string
+
+  /blocks:
+    post:
+      summary: Block a user
+      tags: [Safety Features]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [blocked_user_id]
+              properties:
+                blocked_user_id:
+                  type: integer
+      responses:
+        '201':
+          description: User blocked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        is_verified:
+          type: boolean
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        display_name:
+          type: string
+        bio:
+          type: string
+        gender:
+          type: string
+          enum: [male, female, other]
+        age:
+          type: integer
+          description: Calculated age
+        show_age:
+          type: boolean
+        location:
+          type: object
+          properties:
+            lat:
+              type: number
+            lng:
+              type: number
+        max_distance:
+          type: integer
+        age_range:
+          type: object
+          properties:
+            min:
+              type: integer
+            max:
+              type: integer
+        interests:
+          type: array
+          items:
+            $ref: '#/components/schemas/Interest'
+        photos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Photo'
+
+    UserCard:
+      type: object
+      description: Simplified user info for matching recommendations
+      properties:
+        id:
+          type: integer
+        display_name:
+          type: string
+        age:
+          type: integer
+        primary_photo:
+          $ref: '#/components/schemas/Photo'
+        bio:
+          type: string
+        interests:
+          type: array
+          items:
+            type: string
+        distance:
+          type: number
+          description: Distance in km
+
+    Photo:
+      type: object
+      properties:
+        id:
+          type: integer
+        url:
+          type: string
+        is_primary:
+          type: boolean
+        display_order:
+          type: integer
+
+    Interest:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+
+    ChatMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        match_id:
+          type: integer
+        sender_id:
+          type: integer
+        content:
+          type: string
+        message_type:
+          type: string
+          enum: [text, image, emoji]
+        is_read:
+          type: boolean
+        sent_at:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: User-friendly error message
+        details:
+          type: object
+          description: Additional error details

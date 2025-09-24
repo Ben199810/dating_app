@@ -1,5 +1,5 @@
 database:
-  host: mysql  # Docker Compose 中的 MySQL 服務名稱
+  host: mysql # Docker Compose 中的 MySQL 服務名稱
   port: 3306
   user: chat_user
   password: chat_password
@@ -7,6 +7,12 @@ database:
   charset: utf8mb4
   parseTime: true
   loc: Local
+
+redis:
+  host: redis # Docker Compose 中的 Redis 服務名稱
+  port: 6379
+  password: ""
+  db: 0
 
 server:
   port: 8080

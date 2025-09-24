@@ -8,6 +8,12 @@ database:
   parseTime: true
   loc: Local
 
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0
+
 server:
   port: 8080
   mode: debug
