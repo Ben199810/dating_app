@@ -62,11 +62,11 @@
 
 ### 合約測試
 
-- [ ] T005 [P] 合約測試 POST /api/auth/register 在 tests/contract/test_auth_register.go
-- [ ] T006 [P] 合約測試 POST /api/auth/login 在 tests/contract/test_auth_login.go
-- [ ] T007 [P] 合約測試 GET /users/profile 在 tests/contract/test_profile_get.go
-- [ ] T008 [P] 合約測試 PUT /users/profile 在 tests/contract/test_profile_update.go
-- [ ] T009 [P] 合約測試 POST /users/photos 在 tests/contract/test_photos_upload.go
+- [x] T005 [P] 合約測試 POST /api/auth/register 在 tests/contract/auth_register_test.go
+- [x] T006 [P] 合約測試 POST /api/auth/login 在 tests/contract/auth_login_test.go
+- [x] T007 [P] 合約測試 GET /users/profile 在 tests/contract/profile_get_test.go
+- [x] T008 [P] 合約測試 PUT /users/profile 在 tests/contract/profile_update_test.go
+- [x] T009 [P] 合約測試 POST /users/photos 在 tests/contract/photos_upload_test.go
 - [ ] T010 [P] 合約測試 GET /matching/potential 在 tests/contract/test_matching_get.go
 - [ ] T011 [P] 合約測試 POST /matching/swipe 在 tests/contract/test_matching_swipe.go
 - [ ] T012 [P] 合約測試 GET /chat/matches 在 tests/contract/test_chat_matches.go
