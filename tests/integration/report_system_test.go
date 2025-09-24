@@ -32,18 +32,18 @@ type TestReportUser struct {
 
 // ReportData 檢舉資料結構
 type ReportData struct {
-	ID           uint      `json:"id"`
-	ReporterID   uint      `json:"reporter_id"`
-	ReportedID   uint      `json:"reported_id"`
-	Reason       string    `json:"reason"`
-	Category     string    `json:"category"`
-	Description  string    `json:"description"`
-	Evidence     string    `json:"evidence,omitempty"`
-	Status       string    `json:"status"`
-	CreatedAt    time.Time `json:"created_at"`
-	ReviewedAt   *time.Time `json:"reviewed_at,omitempty"`
-	ReviewerID   *uint     `json:"reviewer_id,omitempty"`
-	ReviewNotes  string    `json:"review_notes,omitempty"`
+	ID          uint       `json:"id"`
+	ReporterID  uint       `json:"reporter_id"`
+	ReportedID  uint       `json:"reported_id"`
+	Reason      string     `json:"reason"`
+	Category    string     `json:"category"`
+	Description string     `json:"description"`
+	Evidence    string     `json:"evidence,omitempty"`
+	Status      string     `json:"status"`
+	CreatedAt   time.Time  `json:"created_at"`
+	ReviewedAt  *time.Time `json:"reviewed_at,omitempty"`
+	ReviewerID  *uint      `json:"reviewer_id,omitempty"`
+	ReviewNotes string     `json:"review_notes,omitempty"`
 }
 
 // BlockData 封鎖資料結構
@@ -71,18 +71,18 @@ func (suite *ReportSystemTestSuite) SetupSuite() {
 		reports := api.Group("/reports")
 		reports.Use(suite.mockJWTAuth())
 		{
-			reports.POST("", suite.mockCreateReport)                    // POST /api/reports
-			reports.GET("", suite.mockGetUserReports)                  // GET /api/reports (使用者的檢舉記錄)
-			reports.GET("/:report_id", suite.mockGetReportDetails)      // GET /api/reports/{report_id}
+			reports.POST("", suite.mockCreateReport)               // POST /api/reports
+			reports.GET("", suite.mockGetUserReports)              // GET /api/reports (使用者的檢舉記錄)
+			reports.GET("/:report_id", suite.mockGetReportDetails) // GET /api/reports/{report_id}
 		}
 
 		// 封鎖相關端點
 		blocks := api.Group("/blocks")
 		blocks.Use(suite.mockJWTAuth())
 		{
-			blocks.POST("", suite.mockCreateBlock)                      // POST /api/blocks
-			blocks.GET("", suite.mockGetUserBlocks)                    // GET /api/blocks (使用者的封鎖清單)
-			blocks.DELETE("/:block_id", suite.mockRemoveBlock)          // DELETE /api/blocks/{block_id}
+			blocks.POST("", suite.mockCreateBlock)             // POST /api/blocks
+			blocks.GET("", suite.mockGetUserBlocks)            // GET /api/blocks (使用者的封鎖清單)
+			blocks.DELETE("/:block_id", suite.mockRemoveBlock) // DELETE /api/blocks/{block_id}
 		}
 
 		// 管理員相關端點（檢舉審核）
@@ -90,15 +90,15 @@ func (suite *ReportSystemTestSuite) SetupSuite() {
 		admin.Use(suite.mockJWTAuth())
 		admin.Use(suite.mockAdminAuth()) // 管理員權限檢查
 		{
-			admin.GET("/reports", suite.mockGetAllReports)              // GET /admin/reports
-			admin.PUT("/reports/:report_id", suite.mockReviewReport)    // PUT /admin/reports/{report_id}
+			admin.GET("/reports", suite.mockGetAllReports)                       // GET /admin/reports
+			admin.PUT("/reports/:report_id", suite.mockReviewReport)             // PUT /admin/reports/{report_id}
 			admin.GET("/users/:user_id/reports", suite.mockGetUserReportHistory) // GET /admin/users/{user_id}/reports
 		}
 	}
 
 	suite.authTokens = make(map[string]string)
 	suite.testUsers = make(map[string]TestReportUser)
-	
+
 	// 初始化測試用戶資料
 	suite.setupTestReportUsers()
 }
@@ -136,7 +136,7 @@ func (suite *ReportSystemTestSuite) setupTestReportUsers() {
 	}
 
 	suite.testUsers = users
-	
+
 	// 設置模擬 JWT tokens
 	for identifier := range users {
 		suite.authTokens[identifier] = fmt.Sprintf("mock_jwt_token_for_%s", identifier)
@@ -152,19 +152,19 @@ func (suite *ReportSystemTestSuite) mockJWTAuth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		
+
 		if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "無效的令牌格式"})
 			c.Abort()
 			return
 		}
-		
+
 		token := authHeader[7:]
-		
+
 		var currentUser TestReportUser
 		var found bool
 		var userRole string = "user"
-		
+
 		for identifier, expectedToken := range suite.authTokens {
 			if token == expectedToken {
 				currentUser = suite.testUsers[identifier]
@@ -175,13 +175,13 @@ func (suite *ReportSystemTestSuite) mockJWTAuth() gin.HandlerFunc {
 				break
 			}
 		}
-		
+
 		if !found {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "無效的認證令牌"})
 			c.Abort()
 			return
 		}
-		
+
 		c.Set("user_id", currentUser.ID)
 		c.Set("current_user", currentUser)
 		c.Set("user_role", userRole)
@@ -205,21 +205,21 @@ func (suite *ReportSystemTestSuite) mockAdminAuth() gin.HandlerFunc {
 // 檢舉相關端點實作
 func (suite *ReportSystemTestSuite) mockCreateReport(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{
-		"error": "檢舉功能尚未實作",
+		"error":   "檢舉功能尚未實作",
 		"message": "POST /api/reports endpoint not implemented yet",
 	})
 }
 
 func (suite *ReportSystemTestSuite) mockGetUserReports(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{
-		"error": "用戶檢舉記錄功能尚未實作",
+		"error":   "用戶檢舉記錄功能尚未實作",
 		"message": "GET /api/reports endpoint not implemented yet",
 	})
 }
 
 func (suite *ReportSystemTestSuite) mockGetReportDetails(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{
-		"error": "檢舉詳情功能尚未實作",
+		"error":   "檢舉詳情功能尚未實作",
 		"message": "GET /api/reports/{report_id} endpoint not implemented yet",
 	})
 }
@@ -227,21 +227,21 @@ func (suite *ReportSystemTestSuite) mockGetReportDetails(c *gin.Context) {
 // 封鎖相關端點實作
 func (suite *ReportSystemTestSuite) mockCreateBlock(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{
-		"error": "封鎖功能尚未實作",
+		"error":   "封鎖功能尚未實作",
 		"message": "POST /api/blocks endpoint not implemented yet",
 	})
 }
 
 func (suite *ReportSystemTestSuite) mockGetUserBlocks(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{
-		"error": "封鎖清單功能尚未實作",
+		"error":   "封鎖清單功能尚未實作",
 		"message": "GET /api/blocks endpoint not implemented yet",
 	})
 }
 
 func (suite *ReportSystemTestSuite) mockRemoveBlock(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{
-		"error": "解除封鎖功能尚未實作",
+		"error":   "解除封鎖功能尚未實作",
 		"message": "DELETE /api/blocks/{block_id} endpoint not implemented yet",
 	})
 }
@@ -249,21 +249,21 @@ func (suite *ReportSystemTestSuite) mockRemoveBlock(c *gin.Context) {
 // 管理員相關端點實作
 func (suite *ReportSystemTestSuite) mockGetAllReports(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{
-		"error": "管理員檢舉清單功能尚未實作",
+		"error":   "管理員檢舉清單功能尚未實作",
 		"message": "GET /admin/reports endpoint not implemented yet",
 	})
 }
 
 func (suite *ReportSystemTestSuite) mockReviewReport(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{
-		"error": "檢舉審核功能尚未實作",
+		"error":   "檢舉審核功能尚未實作",
 		"message": "PUT /admin/reports/{report_id} endpoint not implemented yet",
 	})
 }
 
 func (suite *ReportSystemTestSuite) mockGetUserReportHistory(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{
-		"error": "用戶檢舉歷史功能尚未實作",
+		"error":   "用戶檢舉歷史功能尚未實作",
 		"message": "GET /admin/users/{user_id}/reports endpoint not implemented yet",
 	})
 }
@@ -278,20 +278,20 @@ func (suite *ReportSystemTestSuite) TestCreateReport() {
 		"description": "該用戶發送不當訊息騷擾我",
 		"evidence":    "screenshot_url.jpg",
 	}
-	
+
 	reqBody, _ := json.Marshal(reportData)
 	req := suite.createAuthenticatedRequest("POST", "/api/reports", bytes.NewBuffer(reqBody), "alice")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	// 目前應該回傳 501 (尚未實作)
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	suite.NoError(err)
 	suite.Equal("檢舉功能尚未實作", response["error"])
-	
+
 	// 當實作完成後，應該驗證：
 	// - HTTP 201 Created
 	// - 回傳檢舉 ID
@@ -339,7 +339,7 @@ func (suite *ReportSystemTestSuite) TestCreateReportValidation() {
 			name: "描述過短",
 			data: map[string]interface{}{
 				"reported_id": suite.testUsers["bob"].ID,
-				"category":    "inappropriate_behavior", 
+				"category":    "inappropriate_behavior",
 				"reason":      "harassment",
 				"description": "短",
 			},
@@ -353,7 +353,7 @@ func (suite *ReportSystemTestSuite) TestCreateReportValidation() {
 			req := suite.createAuthenticatedRequest("POST", "/api/reports", bytes.NewBuffer(reqBody), "alice")
 			w := httptest.NewRecorder()
 			suite.router.ServeHTTP(w, req)
-			
+
 			// 目前都會回傳 501，實作完成後應該是 400
 			suite.Equal(http.StatusNotImplemented, w.Code)
 		})
@@ -368,21 +368,21 @@ func (suite *ReportSystemTestSuite) TestDuplicateReportPrevention() {
 		"reason":      "harassment",
 		"description": "該用戶行為不當，騷擾其他用戶",
 	}
-	
+
 	reqBody, _ := json.Marshal(reportData)
-	
+
 	// 第一次檢舉
 	req := suite.createAuthenticatedRequest("POST", "/api/reports", bytes.NewBuffer(reqBody), "alice")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	// 第二次檢舉同一個人（應該被拒絕）
 	reqBody, _ = json.Marshal(reportData)
 	req = suite.createAuthenticatedRequest("POST", "/api/reports", bytes.NewBuffer(reqBody), "alice")
 	w = httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	// 當實作完成時，第二次檢舉應該回傳 409 Conflict
 	suite.Equal(http.StatusNotImplemented, w.Code)
 }
@@ -394,14 +394,14 @@ func (suite *ReportSystemTestSuite) TestCreateBlock() {
 		"blocked_id": suite.testUsers["bob"].ID,
 		"reason":     "inappropriate_behavior",
 	}
-	
+
 	reqBody, _ := json.Marshal(blockData)
 	req := suite.createAuthenticatedRequest("POST", "/api/blocks", bytes.NewBuffer(reqBody), "alice")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	suite.NoError(err)
@@ -446,7 +446,7 @@ func (suite *ReportSystemTestSuite) TestBlockValidation() {
 			req := suite.createAuthenticatedRequest("POST", "/api/blocks", bytes.NewBuffer(reqBody), "alice")
 			w := httptest.NewRecorder()
 			suite.router.ServeHTTP(w, req)
-			
+
 			suite.Equal(http.StatusNotImplemented, w.Code)
 		})
 	}
@@ -458,9 +458,9 @@ func (suite *ReportSystemTestSuite) TestGetUserReports() {
 	req := suite.createAuthenticatedRequest("GET", "/api/reports", nil, "alice")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	// 當實作完成後，應該驗證：
 	// - 只能查看自己的檢舉記錄
 	// - 支援分頁查詢
@@ -474,9 +474,9 @@ func (suite *ReportSystemTestSuite) TestGetUserBlocks() {
 	req := suite.createAuthenticatedRequest("GET", "/api/blocks", nil, "alice")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	// 當實作完成後，應該驗證：
 	// - 只能查看自己的封鎖清單
 	// - 包含被封鎖用戶的基本資訊
@@ -489,9 +489,9 @@ func (suite *ReportSystemTestSuite) TestRemoveBlock() {
 	req := suite.createAuthenticatedRequest("DELETE", "/api/blocks/1", nil, "alice")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	// 當實作完成後，應該驗證：
 	// - 只能解除自己的封鎖
 	// - 成功回傳 204 No Content
@@ -504,9 +504,9 @@ func (suite *ReportSystemTestSuite) TestAdminGetAllReports() {
 	req := suite.createAuthenticatedRequest("GET", "/admin/reports", nil, "admin")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	// 當實作完成後，應該驗證：
 	// - 支援狀態篩選
 	// - 支援分頁查詢
@@ -522,14 +522,14 @@ func (suite *ReportSystemTestSuite) TestAdminReviewReport() {
 		"review_notes": "確認為騷擾行為，對被檢舉用戶進行警告",
 		"punishment":   "warning", // "warning", "temporary_ban", "permanent_ban"
 	}
-	
+
 	reqBody, _ := json.Marshal(reviewData)
 	req := suite.createAuthenticatedRequest("PUT", "/admin/reports/1", bytes.NewBuffer(reqBody), "admin")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	// 當實作完成後，應該驗證：
 	// - 檢舉狀態更新
 	// - 相關懲罰執行
@@ -543,10 +543,10 @@ func (suite *ReportSystemTestSuite) TestNonAdminAccessAdmin() {
 	req := suite.createAuthenticatedRequest("GET", "/admin/reports", nil, "alice")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	// 應該回傳 403 Forbidden
 	suite.Equal(http.StatusForbidden, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	suite.NoError(err)
@@ -559,9 +559,9 @@ func (suite *ReportSystemTestSuite) TestGetUserReportHistory() {
 	req := suite.createAuthenticatedRequest("GET", "/admin/users/2/reports", nil, "admin")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	// 當實作完成後，應該驗證：
 	// - 該用戶所有相關檢舉記錄
 	// - 包含作為檢舉者和被檢舉者的記錄
@@ -589,12 +589,12 @@ func (suite *ReportSystemTestSuite) TestReportCategories() {
 				"reason":      "harassment",
 				"description": "該用戶行為不當，違反社群規範",
 			}
-			
+
 			reqBody, _ := json.Marshal(reportData)
 			req := suite.createAuthenticatedRequest("POST", "/api/reports", bytes.NewBuffer(reqBody), "alice")
 			w := httptest.NewRecorder()
 			suite.router.ServeHTTP(w, req)
-			
+
 			// 目前都會回傳 501
 			suite.Equal(http.StatusNotImplemented, w.Code)
 		})
@@ -605,7 +605,7 @@ func (suite *ReportSystemTestSuite) TestReportCategories() {
 func (suite *ReportSystemTestSuite) TestBlockReasons() {
 	validReasons := []string{
 		"inappropriate_behavior",
-		"harassment", 
+		"harassment",
 		"spam",
 		"not_interested",
 		"fake_profile",
@@ -618,12 +618,12 @@ func (suite *ReportSystemTestSuite) TestBlockReasons() {
 				"blocked_id": suite.testUsers["bob"].ID,
 				"reason":     reason,
 			}
-			
+
 			reqBody, _ := json.Marshal(blockData)
 			req := suite.createAuthenticatedRequest("POST", "/api/blocks", bytes.NewBuffer(reqBody), "alice")
 			w := httptest.NewRecorder()
 			suite.router.ServeHTTP(w, req)
-			
+
 			suite.Equal(http.StatusNotImplemented, w.Code)
 		})
 	}
@@ -647,9 +647,9 @@ func (suite *ReportSystemTestSuite) TestUnauthorizedAccess() {
 			req, _ := http.NewRequest(endpoint.method, endpoint.path, nil)
 			w := httptest.NewRecorder()
 			suite.router.ServeHTTP(w, req)
-			
+
 			suite.Equal(http.StatusUnauthorized, w.Code)
-			
+
 			var response map[string]interface{}
 			err := json.Unmarshal(w.Body.Bytes(), &response)
 			suite.NoError(err)
@@ -662,20 +662,20 @@ func (suite *ReportSystemTestSuite) TestUnauthorizedAccess() {
 func (suite *ReportSystemTestSuite) createAuthenticatedRequest(method, path string, body *bytes.Buffer, userIdentifier string) *http.Request {
 	var req *http.Request
 	var err error
-	
+
 	if body != nil {
 		req, err = http.NewRequest(method, path, body)
 	} else {
 		req, err = http.NewRequest(method, path, nil)
 	}
-	
+
 	suite.Require().NoError(err)
 	req.Header.Set("Content-Type", "application/json")
-	
+
 	// 設置模擬 JWT token
 	token, exists := suite.authTokens[userIdentifier]
 	suite.Require().True(exists, "User %s not found in auth tokens", userIdentifier)
 	req.Header.Set("Authorization", "Bearer "+token)
-	
+
 	return req
 }

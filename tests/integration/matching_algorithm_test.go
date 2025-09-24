@@ -48,7 +48,7 @@ func (suite *MatchingAlgorithmTestSuite) SetupSuite() {
 	{
 		// 模擬 JWT 認證中間件
 		matches.Use(suite.mockJWTAuth())
-		
+
 		// 這些端點目前會回傳 501 Not Implemented（遵循 TDD）
 		matches.GET("/discover", suite.mockGetMatchingCandidates)
 		matches.POST("/like", suite.mockCreateMatch)
@@ -56,7 +56,7 @@ func (suite *MatchingAlgorithmTestSuite) SetupSuite() {
 
 	suite.authTokens = make(map[string]string)
 	suite.testUsers = make(map[string]TestUser)
-	
+
 	// 初始化測試用戶資料
 	suite.setupTestUsers()
 }
@@ -79,7 +79,7 @@ func (suite *MatchingAlgorithmTestSuite) setupTestUsers() {
 			ID:          2,
 			Email:       "bob@test.com",
 			DisplayName: "Bob Wang",
-			Gender:      "male", 
+			Gender:      "male",
 			Age:         30,
 			BirthDate:   now.AddDate(-30, 0, 0),
 			Interests:   []string{"travel", "sports", "movies"},
@@ -108,7 +108,7 @@ func (suite *MatchingAlgorithmTestSuite) setupTestUsers() {
 	}
 
 	suite.testUsers = users
-	
+
 	// 設置模擬 JWT tokens
 	for identifier := range users {
 		suite.authTokens[identifier] = fmt.Sprintf("mock_jwt_token_for_%s", identifier)
@@ -125,16 +125,16 @@ func (suite *MatchingAlgorithmTestSuite) mockJWTAuth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		
+
 		// 簡單驗證 token 格式
 		if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "無效的令牌格式"})
 			c.Abort()
 			return
 		}
-		
+
 		token := authHeader[7:]
-		
+
 		// 根據 token 找到對應的用戶
 		var currentUser TestUser
 		var found bool
@@ -145,13 +145,13 @@ func (suite *MatchingAlgorithmTestSuite) mockJWTAuth() gin.HandlerFunc {
 				break
 			}
 		}
-		
+
 		if !found {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "無效的認證令牌"})
 			c.Abort()
 			return
 		}
-		
+
 		// 將用戶資訊存入上下文
 		c.Set("user_id", currentUser.ID)
 		c.Set("current_user", currentUser)
@@ -163,23 +163,23 @@ func (suite *MatchingAlgorithmTestSuite) mockJWTAuth() gin.HandlerFunc {
 func (suite *MatchingAlgorithmTestSuite) mockGetMatchingCandidates(c *gin.Context) {
 	// 目前回傳 501 Not Implemented（TDD 方式）
 	c.JSON(http.StatusNotImplemented, gin.H{
-		"error": "配對候選人發現功能尚未實作",
+		"error":   "配對候選人發現功能尚未實作",
 		"message": "GET /api/matches/discover endpoint not implemented yet",
 	})
-	
+
 	// 當實作完成時，應該回傳類似這樣的結構：
 	/*
-	currentUser, _ := c.Get("current_user")
-	user := currentUser.(TestUser)
-	
-	candidates := suite.findMatchingCandidates(user)
-	
-	c.JSON(http.StatusOK, gin.H{
-		"candidates": candidates,
-		"total": len(candidates),
-		"page": 1,
-		"limit": 10,
-	})
+		currentUser, _ := c.Get("current_user")
+		user := currentUser.(TestUser)
+
+		candidates := suite.findMatchingCandidates(user)
+
+		c.JSON(http.StatusOK, gin.H{
+			"candidates": candidates,
+			"total": len(candidates),
+			"page": 1,
+			"limit": 10,
+		})
 	*/
 }
 
@@ -187,27 +187,27 @@ func (suite *MatchingAlgorithmTestSuite) mockGetMatchingCandidates(c *gin.Contex
 func (suite *MatchingAlgorithmTestSuite) mockCreateMatch(c *gin.Context) {
 	// 目前回傳 501 Not Implemented（TDD 方式）
 	c.JSON(http.StatusNotImplemented, gin.H{
-		"error": "配對功能尚未實作",
+		"error":   "配對功能尚未實作",
 		"message": "POST /api/matches/like endpoint not implemented yet",
 	})
-	
+
 	// 當實作完成時，應該處理點讚邏輯：
 	/*
-	var request struct {
-		TargetUserID uint   `json:"target_user_id"`
-		Action       string `json:"action"` // "like" or "pass"
-	}
-	
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "無效的請求格式"})
-		return
-	}
-	
-	currentUser, _ := c.Get("current_user")
-	user := currentUser.(TestUser)
-	
-	result := suite.processMatchAction(user, request.TargetUserID, request.Action)
-	c.JSON(http.StatusOK, result)
+		var request struct {
+			TargetUserID uint   `json:"target_user_id"`
+			Action       string `json:"action"` // "like" or "pass"
+		}
+
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "無效的請求格式"})
+			return
+		}
+
+		currentUser, _ := c.Get("current_user")
+		user := currentUser.(TestUser)
+
+		result := suite.processMatchAction(user, request.TargetUserID, request.Action)
+		c.JSON(http.StatusOK, result)
 	*/
 }
 
@@ -220,16 +220,16 @@ func (suite *MatchingAlgorithmTestSuite) TestDiscoverCandidates() {
 
 	// 目前應該回傳 501 (尚未實作)
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	suite.NoError(err)
-	
+
 	// 驗證錯誤回應結構
 	suite.Contains(response, "error")
 	suite.Contains(response, "message")
 	suite.Equal("配對候選人發現功能尚未實作", response["error"])
-	
+
 	// 當實作完成後，應該驗證以下結構：
 	// - candidates: 候選人陣列
 	// - 每個候選人包含: id, display_name, age, photos, interests, distance
@@ -243,15 +243,15 @@ func (suite *MatchingAlgorithmTestSuite) TestDiscoverWithFilters() {
 	req := suite.createAuthenticatedRequest("GET", "/api/matches/discover?min_age=25&max_age=35", nil, "alice")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	// 驗證基本回應結構
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	suite.NoError(err)
 	suite.Contains(response, "error")
-	
+
 	// 當實作完成時，應驗證：
 	// - 只返回符合年齡範圍的候選人
 	// - 距離篩選邏輯
@@ -265,20 +265,20 @@ func (suite *MatchingAlgorithmTestSuite) TestSwipeLikeFlow() {
 		"target_user_id": suite.testUsers["bob"].ID,
 		"action":         "like",
 	}
-	
+
 	reqBody, _ := json.Marshal(likeData)
 	req := suite.createAuthenticatedRequest("POST", "/api/matches/like", bytes.NewBuffer(reqBody), "alice")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	suite.NoError(err)
 	suite.Contains(response, "error")
 	suite.Equal("配對功能尚未實作", response["error"])
-	
+
 	// 當實作完成時，應驗證：
 	// 1. 第一次點讚回傳 pending 狀態
 	// 2. Bob 回讚後雙向配對成功
@@ -292,14 +292,14 @@ func (suite *MatchingAlgorithmTestSuite) TestSwipePassFlow() {
 		"target_user_id": suite.testUsers["carol"].ID,
 		"action":         "pass",
 	}
-	
+
 	reqBody, _ := json.Marshal(passData)
 	req := suite.createAuthenticatedRequest("POST", "/api/matches/like", bytes.NewBuffer(reqBody), "alice")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	// 當實作完成時，應驗證：
 	// - Carol 不再出現在 Alice 的候選清單中
 	// - 拒絕記錄正確存入
@@ -311,41 +311,41 @@ func (suite *MatchingAlgorithmTestSuite) TestDuplicateLikePrevention() {
 		"target_user_id": suite.testUsers["david"].ID,
 		"action":         "like",
 	}
-	
+
 	reqBody, _ := json.Marshal(likeData)
-	
+
 	// 第一次點讚
 	req := suite.createAuthenticatedRequest("POST", "/api/matches/like", bytes.NewBuffer(reqBody), "alice")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	// 第二次點讚同一個人（當實作完成時應該回傳錯誤）
 	reqBody, _ = json.Marshal(likeData)
 	req = suite.createAuthenticatedRequest("POST", "/api/matches/like", bytes.NewBuffer(reqBody), "alice")
 	w = httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	// 當實作完成時，第二次點讚應該回傳 400 錯誤
 	// 並包含 "已經對此用戶表達過意願" 的錯誤訊息
 }
 
-// TestSelfLikePrevention 測試防止自己點讚自己  
+// TestSelfLikePrevention 測試防止自己點讚自己
 func (suite *MatchingAlgorithmTestSuite) TestSelfLikePrevention() {
 	likeData := map[string]interface{}{
 		"target_user_id": suite.testUsers["alice"].ID, // 自己點讚自己
 		"action":         "like",
 	}
-	
+
 	reqBody, _ := json.Marshal(likeData)
 	req := suite.createAuthenticatedRequest("POST", "/api/matches/like", bytes.NewBuffer(reqBody), "alice")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	// 當實作完成時，應該回傳 400 錯誤
 	// 並包含 "無法對自己進行操作" 的錯誤訊息
 }
@@ -354,28 +354,28 @@ func (suite *MatchingAlgorithmTestSuite) TestSelfLikePrevention() {
 func (suite *MatchingAlgorithmTestSuite) TestBlockedUserFiltering() {
 	// 模擬 Alice 已封鎖 Bob 的情況
 	// 當實作完成時，需要檢查資料庫中的 blocks 表
-	
+
 	req := suite.createAuthenticatedRequest("GET", "/api/matches/discover", nil, "alice")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	// 當實作完成時，Bob 不應該出現在候選清單中
 }
 
 // TestMatchingWithInterests 測試基於興趣的配對推薦
 func (suite *MatchingAlgorithmTestSuite) TestMatchingWithInterests() {
-	// Alice 的興趣: ["travel", "music", "cooking"]  
+	// Alice 的興趣: ["travel", "music", "cooking"]
 	// David 的興趣: ["travel", "music", "photography"] - 2個共同興趣
 	// Bob 的興趣: ["travel", "sports", "movies"] - 1個共同興趣
-	
+
 	req := suite.createAuthenticatedRequest("GET", "/api/matches/discover", nil, "alice")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	// 當實作完成時，應驗證：
 	// - David（2個共同興趣）排在 Bob（1個共同興趣）前面
 	// - 興趣相似度計算邏輯正確
@@ -388,9 +388,9 @@ func (suite *MatchingAlgorithmTestSuite) TestUnauthorizedAccess() {
 	req, _ := http.NewRequest("GET", "/api/matches/discover", nil)
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusUnauthorized, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	suite.NoError(err)
@@ -404,9 +404,9 @@ func (suite *MatchingAlgorithmTestSuite) TestInvalidToken() {
 	req.Header.Set("Authorization", "Bearer invalid_token")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusUnauthorized, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	suite.NoError(err)
@@ -417,20 +417,20 @@ func (suite *MatchingAlgorithmTestSuite) TestInvalidToken() {
 func (suite *MatchingAlgorithmTestSuite) createAuthenticatedRequest(method, url string, body *bytes.Buffer, userIdentifier string) *http.Request {
 	var req *http.Request
 	var err error
-	
+
 	if body != nil {
 		req, err = http.NewRequest(method, url, body)
 	} else {
 		req, err = http.NewRequest(method, url, nil)
 	}
-	
+
 	suite.Require().NoError(err)
 	req.Header.Set("Content-Type", "application/json")
-	
+
 	// 設置模擬 JWT token
 	token, exists := suite.authTokens[userIdentifier]
 	suite.Require().True(exists, "User %s not found in auth tokens", userIdentifier)
 	req.Header.Set("Authorization", "Bearer "+token)
-	
+
 	return req
 }

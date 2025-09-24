@@ -25,11 +25,11 @@ type WebSocketChatTestSuite struct {
 
 // TestChatUser WebSocket 測試用戶結構
 type TestChatUser struct {
-	ID          uint     `json:"id"`
-	DisplayName string   `json:"display_name"`
-	Email       string   `json:"email"`
-	IsOnline    bool     `json:"is_online"`
-	Matches     []uint   `json:"matches"` // 已配對的用戶 ID 列表
+	ID          uint   `json:"id"`
+	DisplayName string `json:"display_name"`
+	Email       string `json:"email"`
+	IsOnline    bool   `json:"is_online"`
+	Matches     []uint `json:"matches"` // 已配對的用戶 ID 列表
 }
 
 // ChatMessage WebSocket 聊天訊息結構
@@ -45,7 +45,7 @@ type ChatMessage struct {
 
 // WebSocketEvent WebSocket 事件結構
 type WebSocketEvent struct {
-	Type    string      `json:"type"`    // "message", "typing", "online", "offline"
+	Type    string      `json:"type"` // "message", "typing", "online", "offline"
 	Payload interface{} `json:"payload"`
 }
 
@@ -65,10 +65,10 @@ func (suite *WebSocketChatTestSuite) SetupSuite() {
 		chats := api.Group("/chats")
 		chats.Use(suite.mockJWTAuth())
 		{
-			chats.GET("", suite.mockGetChatList)                            // GET /api/chats
-			chats.GET("/:match_id/messages", suite.mockGetChatMessages)     // GET /api/chats/{match_id}/messages
-			chats.POST("/:match_id/messages", suite.mockSendChatMessage)    // POST /api/chats/{match_id}/messages
-			chats.PUT("/:match_id/read", suite.mockMarkMessagesAsRead)      // PUT /api/chats/{match_id}/read
+			chats.GET("", suite.mockGetChatList)                         // GET /api/chats
+			chats.GET("/:match_id/messages", suite.mockGetChatMessages)  // GET /api/chats/{match_id}/messages
+			chats.POST("/:match_id/messages", suite.mockSendChatMessage) // POST /api/chats/{match_id}/messages
+			chats.PUT("/:match_id/read", suite.mockMarkMessagesAsRead)   // PUT /api/chats/{match_id}/read
 		}
 	}
 
@@ -80,7 +80,7 @@ func (suite *WebSocketChatTestSuite) SetupSuite() {
 
 	suite.authTokens = make(map[string]string)
 	suite.testUsers = make(map[string]TestChatUser)
-	
+
 	// 初始化測試用戶資料
 	suite.setupTestChatUsers()
 }
@@ -102,7 +102,7 @@ func (suite *WebSocketChatTestSuite) setupTestChatUsers() {
 		},
 		"bob": {
 			ID:          2,
-			DisplayName: "Bob Wang", 
+			DisplayName: "Bob Wang",
 			Email:       "bob@test.com",
 			IsOnline:    false,
 			Matches:     []uint{1}, // 與 Alice 配對
@@ -117,7 +117,7 @@ func (suite *WebSocketChatTestSuite) setupTestChatUsers() {
 	}
 
 	suite.testUsers = users
-	
+
 	// 設置模擬 JWT tokens
 	for identifier := range users {
 		suite.authTokens[identifier] = fmt.Sprintf("mock_jwt_token_for_%s", identifier)
@@ -133,15 +133,15 @@ func (suite *WebSocketChatTestSuite) mockJWTAuth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		
+
 		if len(authHeader) < 7 || authHeader[:7] != "Bearer " {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "無效的令牌格式"})
 			c.Abort()
 			return
 		}
-		
+
 		token := authHeader[7:]
-		
+
 		var currentUser TestChatUser
 		var found bool
 		for identifier, expectedToken := range suite.authTokens {
@@ -151,13 +151,13 @@ func (suite *WebSocketChatTestSuite) mockJWTAuth() gin.HandlerFunc {
 				break
 			}
 		}
-		
+
 		if !found {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "無效的認證令牌"})
 			c.Abort()
 			return
 		}
-		
+
 		c.Set("user_id", currentUser.ID)
 		c.Set("current_user", currentUser)
 		c.Next()
@@ -168,7 +168,7 @@ func (suite *WebSocketChatTestSuite) mockJWTAuth() gin.HandlerFunc {
 func (suite *WebSocketChatTestSuite) mockGetChatList(c *gin.Context) {
 	// 目前回傳 501 Not Implemented（TDD 方式）
 	c.JSON(http.StatusNotImplemented, gin.H{
-		"error": "聊天列表功能尚未實作",
+		"error":   "聊天列表功能尚未實作",
 		"message": "GET /api/chats endpoint not implemented yet",
 	})
 }
@@ -176,7 +176,7 @@ func (suite *WebSocketChatTestSuite) mockGetChatList(c *gin.Context) {
 // mockGetChatMessages 模擬獲取聊天訊息端點
 func (suite *WebSocketChatTestSuite) mockGetChatMessages(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{
-		"error": "聊天訊息獲取功能尚未實作",
+		"error":   "聊天訊息獲取功能尚未實作",
 		"message": "GET /api/chats/{match_id}/messages endpoint not implemented yet",
 	})
 }
@@ -184,7 +184,7 @@ func (suite *WebSocketChatTestSuite) mockGetChatMessages(c *gin.Context) {
 // mockSendChatMessage 模擬發送聊天訊息端點
 func (suite *WebSocketChatTestSuite) mockSendChatMessage(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{
-		"error": "發送訊息功能尚未實作",
+		"error":   "發送訊息功能尚未實作",
 		"message": "POST /api/chats/{match_id}/messages endpoint not implemented yet",
 	})
 }
@@ -192,7 +192,7 @@ func (suite *WebSocketChatTestSuite) mockSendChatMessage(c *gin.Context) {
 // mockMarkMessagesAsRead 模擬標記訊息已讀端點
 func (suite *WebSocketChatTestSuite) mockMarkMessagesAsRead(c *gin.Context) {
 	c.JSON(http.StatusNotImplemented, gin.H{
-		"error": "標記已讀功能尚未實作",
+		"error":   "標記已讀功能尚未實作",
 		"message": "PUT /api/chats/{match_id}/read endpoint not implemented yet",
 	})
 }
@@ -201,7 +201,7 @@ func (suite *WebSocketChatTestSuite) mockMarkMessagesAsRead(c *gin.Context) {
 func (suite *WebSocketChatTestSuite) mockWebSocketHandler(c *gin.Context) {
 	// 目前回傳 501 Not Implemented（TDD 方式）
 	c.JSON(http.StatusNotImplemented, gin.H{
-		"error": "WebSocket 聊天功能尚未實作",
+		"error":   "WebSocket 聊天功能尚未實作",
 		"message": "WebSocket chat functionality not implemented yet",
 	})
 }
@@ -215,13 +215,13 @@ func (suite *WebSocketChatTestSuite) TestChatListEndpoint() {
 
 	// 目前應該回傳 501 (尚未實作)
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	suite.NoError(err)
 	suite.Contains(response, "error")
 	suite.Equal("聊天列表功能尚未實作", response["error"])
-	
+
 	// 當實作完成後，應該驗證以下結構：
 	// {
 	//   "chats": [
@@ -245,12 +245,12 @@ func (suite *WebSocketChatTestSuite) TestChatMessagesEndpoint() {
 	suite.router.ServeHTTP(w, req)
 
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	suite.NoError(err)
 	suite.Contains(response, "error")
-	
+
 	// 當實作完成後，應該驗證：
 	// - 分頁參數處理
 	// - 按時間排序
@@ -265,14 +265,14 @@ func (suite *WebSocketChatTestSuite) TestSendChatMessage() {
 		"content":      "Hello Bob! 你好嗎？",
 		"message_type": "text",
 	}
-	
+
 	reqBody, _ := json.Marshal(messageData)
 	req := suite.createAuthenticatedRequest("POST", "/api/chats/1/messages", bytes.NewBuffer(reqBody), "alice")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	// 當實作完成後，應該驗證：
 	// - 訊息內容長度限制
 	// - XSS 防護
@@ -287,9 +287,9 @@ func (suite *WebSocketChatTestSuite) TestMarkMessagesAsRead() {
 	req := suite.createAuthenticatedRequest("PUT", "/api/chats/1/read", nil, "alice")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	// 當實作完成後，應該驗證：
 	// - 只能標記自己收到的訊息
 	// - 批量標記邏輯
@@ -303,10 +303,10 @@ func (suite *WebSocketChatTestSuite) TestWebSocketConnection() {
 	req := suite.createAuthenticatedRequest("GET", "/ws", nil, "alice")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	// 目前應該回傳 501 Not Implemented
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	suite.NoError(err)
@@ -320,11 +320,11 @@ func (suite *WebSocketChatTestSuite) TestWebSocketAuthenticationFailure() {
 	req, _ := http.NewRequest("GET", "/ws", nil)
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	// 由於 WebSocket 端點目前沒有認證檢查，會回傳 501
 	// 實作完成後應該要求認證
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	suite.T().Log("當 WebSocket 實作完成時，此測試應驗證：")
 	suite.T().Log("- 未認證連接被拒絕")
 	suite.T().Log("- 認證失敗的錯誤訊息")
@@ -335,10 +335,10 @@ func (suite *WebSocketChatTestSuite) TestRealTimeMessageDelivery() {
 	// 這個測試模擬雙向 WebSocket 通信
 	// 在真實實作中需要：
 	// 1. Alice 建立 WebSocket 連接
-	// 2. Bob 建立 WebSocket 連接  
+	// 2. Bob 建立 WebSocket 連接
 	// 3. Alice 發送訊息
 	// 4. 驗證 Bob 即時收到訊息
-	
+
 	suite.T().Log("模擬即時訊息傳遞測試")
 	suite.T().Log("當 WebSocket 實作完成時，此測試將驗證：")
 	suite.T().Log("- 雙向連接建立")
@@ -438,9 +438,9 @@ func (suite *WebSocketChatTestSuite) TestMessageValidation() {
 			req := suite.createAuthenticatedRequest("POST", "/api/chats/1/messages", bytes.NewBuffer(reqBody), "alice")
 			w := httptest.NewRecorder()
 			suite.router.ServeHTTP(w, req)
-			
+
 			suite.Equal(tc.expected, w.Code)
-			
+
 			// 當實作完成後，驗證錯誤訊息內容
 		})
 	}
@@ -452,9 +452,9 @@ func (suite *WebSocketChatTestSuite) TestUnauthorizedChatAccess() {
 	req := suite.createAuthenticatedRequest("GET", "/api/chats/999/messages", nil, "alice")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	// 當實作完成後，應該回傳 403 或 404
 }
 
@@ -464,9 +464,9 @@ func (suite *WebSocketChatTestSuite) TestChatPagination() {
 	req := suite.createAuthenticatedRequest("GET", "/api/chats/1/messages?page=1&limit=20", nil, "alice")
 	w := httptest.NewRecorder()
 	suite.router.ServeHTTP(w, req)
-	
+
 	suite.Equal(http.StatusNotImplemented, w.Code)
-	
+
 	// 當實作完成後，應該驗證分頁邏輯
 }
 
@@ -474,20 +474,20 @@ func (suite *WebSocketChatTestSuite) TestChatPagination() {
 func (suite *WebSocketChatTestSuite) createAuthenticatedRequest(method, path string, body *bytes.Buffer, userIdentifier string) *http.Request {
 	var req *http.Request
 	var err error
-	
+
 	if body != nil {
 		req, err = http.NewRequest(method, path, body)
 	} else {
 		req, err = http.NewRequest(method, path, nil)
 	}
-	
+
 	suite.Require().NoError(err)
 	req.Header.Set("Content-Type", "application/json")
-	
+
 	// 設置模擬 JWT token
 	token, exists := suite.authTokens[userIdentifier]
 	suite.Require().True(exists, "User %s not found in auth tokens", userIdentifier)
 	req.Header.Set("Authorization", "Bearer "+token)
-	
+
 	return req
 }

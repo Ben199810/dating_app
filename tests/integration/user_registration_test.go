@@ -53,7 +53,7 @@ func (suite *UserRegistrationTestSuite) mockRegisterEndpoint(c *gin.Context) {
 	// 簡單的年齡檢查邏輯（模擬）
 	now := time.Now()
 	age := now.Year() - registrationData.BirthDate.Year()
-	
+
 	// 調整月日差異
 	if now.YearDay() < registrationData.BirthDate.YearDay() {
 		age--
@@ -61,7 +61,7 @@ func (suite *UserRegistrationTestSuite) mockRegisterEndpoint(c *gin.Context) {
 
 	if age < 18 {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "年齡限制",
+			"error":   "年齡限制",
 			"message": "必須年滿18歲才能註冊",
 		})
 		return
@@ -69,7 +69,7 @@ func (suite *UserRegistrationTestSuite) mockRegisterEndpoint(c *gin.Context) {
 
 	// 目前回傳 501 Not Implemented（TDD 方式）
 	c.JSON(http.StatusNotImplemented, gin.H{
-		"error": "註冊功能尚未實作",
+		"error":   "註冊功能尚未實作",
 		"message": "POST /api/auth/register endpoint not implemented yet",
 	})
 }
@@ -125,7 +125,7 @@ func (suite *UserRegistrationTestSuite) TestUnderageUserRegistration() {
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	suite.NoError(err)
-	
+
 	suite.Contains(response, "error")
 	suite.Contains(response, "message")
 	suite.Contains(response["message"], "18歲", "錯誤訊息應該提及年齡限制")
