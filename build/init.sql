@@ -2,17 +2,18 @@
 
 -- 基於 specs/001-18/data-model.md 規格設計-- 基於 specs/001-18/data-model.md 規格設計
 
-
-
 -- 建立資料庫 (如果不存在)-- 建立資料庫 (如果不存在)
 
-CREATE DATABASE IF NOT EXISTS dating_app CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;CREATE DATABASE IF NOT EXISTS dating_app CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS dating_app CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-USE dating_app;USE dating_app;
+CREATE DATABASE IF NOT EXISTS dating_app CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+USE dating_app;
 
+USE dating_app;
 
 -- 1. 用戶基本資料表-- 1. 用戶基本資料表
+
 
 CREATE TABLE IF NOT EXISTS users (CREATE TABLE IF NOT EXISTS users (
 
@@ -42,11 +43,12 @@ CREATE TABLE IF NOT EXISTS users (CREATE TABLE IF NOT EXISTS users (
 
     INDEX idx_created_at (created_at)    INDEX idx_created_at (created_at)
 
-) ENGINE=InnoDB COMMENT='用戶基本資料';) ENGINE=InnoDB COMMENT='用戶基本資料';
+) ENGINE=InnoDB COMMENT='用戶基本資料';
 
-
+) ENGINE=InnoDB COMMENT='用戶基本資料';
 
 -- 2. 用戶檔案詳細資料表-- 2. 用戶檔案詳細資料表
+
 
 CREATE TABLE IF NOT EXISTS user_profiles (CREATE TABLE IF NOT EXISTS user_profiles (
 
@@ -88,11 +90,12 @@ CREATE TABLE IF NOT EXISTS user_profiles (CREATE TABLE IF NOT EXISTS user_profil
 
     INDEX idx_age_range (age_range_min, age_range_max)    INDEX idx_age_range (age_range_min, age_range_max)
 
-) ENGINE=InnoDB COMMENT='用戶詳細檔案';) ENGINE=InnoDB COMMENT='用戶詳細檔案';
+) ENGINE=InnoDB COMMENT='用戶詳細檔案';
 
-
+) ENGINE=InnoDB COMMENT='用戶詳細檔案';
 
 -- 3. 興趣標籤表-- 3. 興趣標籤表
+
 
 CREATE TABLE IF NOT EXISTS interests (CREATE TABLE IF NOT EXISTS interests (
 
@@ -114,11 +117,12 @@ CREATE TABLE IF NOT EXISTS interests (CREATE TABLE IF NOT EXISTS interests (
 
     INDEX idx_is_active (is_active)    INDEX idx_is_active (is_active)
 
-) ENGINE=InnoDB COMMENT='興趣標籤';) ENGINE=InnoDB COMMENT='興趣標籤';
+) ENGINE=InnoDB COMMENT='興趣標籤';
 
-
+) ENGINE=InnoDB COMMENT='興趣標籤';
 
 -- 4. 用戶興趣關聯表-- 4. 用戶興趣關聯表
+
 
 CREATE TABLE IF NOT EXISTS user_interests (CREATE TABLE IF NOT EXISTS user_interests (
 
@@ -142,11 +146,12 @@ CREATE TABLE IF NOT EXISTS user_interests (CREATE TABLE IF NOT EXISTS user_inter
 
     INDEX idx_interest_id (interest_id)    INDEX idx_interest_id (interest_id)
 
-) ENGINE=InnoDB COMMENT='用戶興趣關聯';) ENGINE=InnoDB COMMENT='用戶興趣關聯';
+) ENGINE=InnoDB COMMENT='用戶興趣關聯';
 
-
+) ENGINE=InnoDB COMMENT='用戶興趣關聯';
 
 -- 5. 用戶照片表-- 5. 用戶照片表
+
 
 CREATE TABLE IF NOT EXISTS photos (CREATE TABLE IF NOT EXISTS photos (
 
@@ -178,11 +183,12 @@ CREATE TABLE IF NOT EXISTS photos (CREATE TABLE IF NOT EXISTS photos (
 
     INDEX idx_upload_status (upload_status)    INDEX idx_upload_status (upload_status)
 
-) ENGINE=InnoDB COMMENT='用戶照片';) ENGINE=InnoDB COMMENT='用戶照片';
+) ENGINE=InnoDB COMMENT='用戶照片';
 
-
+) ENGINE=InnoDB COMMENT='用戶照片';
 
 -- 6. 年齡驗證記錄表-- 6. 年齡驗證記錄表
+
 
 CREATE TABLE IF NOT EXISTS age_verifications (CREATE TABLE IF NOT EXISTS age_verifications (
 
@@ -216,11 +222,12 @@ CREATE TABLE IF NOT EXISTS age_verifications (CREATE TABLE IF NOT EXISTS age_ver
 
     INDEX idx_expires_at (expires_at)    INDEX idx_expires_at (expires_at)
 
-) ENGINE=InnoDB COMMENT='年齡驗證記錄';) ENGINE=InnoDB COMMENT='年齡驗證記錄';
+) ENGINE=InnoDB COMMENT='年齡驗證記錄';
 
-
+) ENGINE=InnoDB COMMENT='年齡驗證記錄';
 
 -- 7. 配對記錄表-- 7. 配對記錄表
+
 
 CREATE TABLE IF NOT EXISTS matches (CREATE TABLE IF NOT EXISTS matches (
 
@@ -266,11 +273,12 @@ CREATE TABLE IF NOT EXISTS matches (CREATE TABLE IF NOT EXISTS matches (
 
     CONSTRAINT chk_different_users CHECK (user1_id != user2_id)    CONSTRAINT chk_different_users CHECK (user1_id != user2_id)
 
-) ENGINE=InnoDB COMMENT='配對記錄';) ENGINE=InnoDB COMMENT='配對記錄';
+) ENGINE=InnoDB COMMENT='配對記錄';
 
-
+) ENGINE=InnoDB COMMENT='配對記錄';
 
 -- 8. 聊天訊息表-- 8. 聊天訊息表
+
 
 CREATE TABLE IF NOT EXISTS chat_messages (CREATE TABLE IF NOT EXISTS chat_messages (
 
@@ -310,11 +318,12 @@ CREATE TABLE IF NOT EXISTS chat_messages (CREATE TABLE IF NOT EXISTS chat_messag
 
     INDEX idx_is_deleted (is_deleted)    INDEX idx_is_deleted (is_deleted)
 
-) ENGINE=InnoDB COMMENT='聊天訊息';) ENGINE=InnoDB COMMENT='聊天訊息';
+) ENGINE=InnoDB COMMENT='聊天訊息';
 
-
+) ENGINE=InnoDB COMMENT='聊天訊息';
 
 -- 9. 檢舉記錄表-- 9. 檢舉記錄表
+
 
 CREATE TABLE IF NOT EXISTS reports (CREATE TABLE IF NOT EXISTS reports (
 
@@ -362,11 +371,12 @@ CREATE TABLE IF NOT EXISTS reports (CREATE TABLE IF NOT EXISTS reports (
 
     INDEX idx_created_at (created_at)    INDEX idx_created_at (created_at)
 
-) ENGINE=InnoDB COMMENT='檢舉記錄';) ENGINE=InnoDB COMMENT='檢舉記錄';
+) ENGINE=InnoDB COMMENT='檢舉記錄';
 
-
+) ENGINE=InnoDB COMMENT='檢舉記錄';
 
 -- 10. 封鎖記錄表-- 10. 封鎖記錄表
+
 
 CREATE TABLE IF NOT EXISTS blocks (CREATE TABLE IF NOT EXISTS blocks (
 
@@ -402,130 +412,172 @@ CREATE TABLE IF NOT EXISTS blocks (CREATE TABLE IF NOT EXISTS blocks (
 
     CONSTRAINT chk_different_block_users CHECK (blocker_id != blocked_user_id)    CONSTRAINT chk_different_block_users CHECK (blocker_id != blocked_user_id)
 
-) ENGINE=InnoDB COMMENT='封鎖記錄';) ENGINE=InnoDB COMMENT='封鎖記錄';
+) ENGINE=InnoDB COMMENT='封鎖記錄';
 
-
+) ENGINE=InnoDB COMMENT='封鎖記錄';
 
 -- 預設興趣標籤數據-- 預設興趣標籤數據
 
-INSERT IGNORE INTO interests (name, category) VALUESINSERT IGNORE INTO interests (name, category) VALUES
+INSERT IGNORE INTO
+    interests (name, category) VALUESINSERT IGNORE INTO interests (name, category)
+VALUES
 
 -- 運動類-- 運動類
 
-('健身', 'sports'),('健身', 'sports'),
-
-('跑步', 'sports'),('跑步', 'sports'),
-
-('游泳', 'sports'),('游泳', 'sports'),
-
-('瑜伽', 'sports'),('瑜伽', 'sports'),
-
-('登山', 'sports'),('登山', 'sports'),
-
-('籃球', 'sports'),('籃球', 'sports'),
-
-('足球', 'sports'),('足球', 'sports'),
-
-('網球', 'sports'),('網球', 'sports'),
-
-
+('健身', 'sports'),
+('健身', 'sports'),
+('跑步', 'sports'),
+('跑步', 'sports'),
+('游泳', 'sports'),
+('游泳', 'sports'),
+('瑜伽', 'sports'),
+('瑜伽', 'sports'),
+('登山', 'sports'),
+('登山', 'sports'),
+('籃球', 'sports'),
+('籃球', 'sports'),
+('足球', 'sports'),
+('足球', 'sports'),
+('網球', 'sports'),
+('網球', 'sports'),
 
 -- 藝術文化-- 藝術文化
 
-('音樂', 'arts'),('音樂', 'arts'),
-
-('畫畫', 'arts'),('畫畫', 'arts'),
-
-('攝影', 'arts'),('攝影', 'arts'),
-
-('舞蹈', 'arts'),('舞蹈', 'arts'),
-
-('電影', 'arts'),('電影', 'arts'),
-
-('閱讀', 'arts'),('閱讀', 'arts'),
-
-('戲劇', 'arts'),('戲劇', 'arts'),
-
-('博物館', 'arts'),('博物館', 'arts'),
-
-
+('音樂', 'arts'),
+('音樂', 'arts'),
+('畫畫', 'arts'),
+('畫畫', 'arts'),
+('攝影', 'arts'),
+('攝影', 'arts'),
+('舞蹈', 'arts'),
+('舞蹈', 'arts'),
+('電影', 'arts'),
+('電影', 'arts'),
+('閱讀', 'arts'),
+('閱讀', 'arts'),
+('戲劇', 'arts'),
+('戲劇', 'arts'),
+('博物館', 'arts'),
+('博物館', 'arts'),
 
 -- 美食-- 美食
 
-('烹飪', 'food'),('烹飪', 'food'),
-
-('品酒', 'food'),('品酒', 'food'),
-
-('咖啡', 'food'),('咖啡', 'food'),
-
-('甜點', 'food'),('甜點', 'food'),
-
-('素食', 'food'),('素食', 'food'),
-
-('異國料理', 'food'),('異國料理', 'food'),
-
-
+('烹飪', 'food'),
+('烹飪', 'food'),
+('品酒', 'food'),
+('品酒', 'food'),
+('咖啡', 'food'),
+('咖啡', 'food'),
+('甜點', 'food'),
+('甜點', 'food'),
+('素食', 'food'),
+('素食', 'food'),
+('異國料理', 'food'),
+('異國料理', 'food'),
 
 -- 旅遊-- 旅遊
 
-('旅遊', 'travel'),('旅遊', 'travel'),
-
-('露營', 'travel'),('露營', 'travel'),
-
-('海邊', 'travel'),('海邊', 'travel'),
-
-('山區', 'travel'),('山區', 'travel'),
-
-('城市探索', 'travel'),('城市探索', 'travel'),
-
-('背包旅行', 'travel'),('背包旅行', 'travel'),
-
-
+('旅遊', 'travel'),
+('旅遊', 'travel'),
+('露營', 'travel'),
+('露營', 'travel'),
+('海邊', 'travel'),
+('海邊', 'travel'),
+('山區', 'travel'),
+('山區', 'travel'),
+('城市探索', 'travel'),
+('城市探索', 'travel'),
+('背包旅行', 'travel'),
+('背包旅行', 'travel'),
 
 -- 科技-- 科技
 
-('程式設計', 'technology'),('程式設計', 'technology'),
-
-('遊戲', 'technology'),('遊戲', 'technology'),
-
-('科技產品', 'technology'),('科技產品', 'technology'),
-
-('人工智慧', 'technology'),('人工智慧', 'technology'),
-
-
+('程式設計', 'technology'),
+('程式設計', 'technology'),
+('遊戲', 'technology'),
+('遊戲', 'technology'),
+('科技產品', 'technology'),
+('科技產品', 'technology'),
+('人工智慧', 'technology'),
+('人工智慧', 'technology'),
 
 -- 生活-- 生活
 
-('寵物', 'lifestyle'),('寵物', 'lifestyle'),
+('寵物', 'lifestyle'),
+('寵物', 'lifestyle'),
+('園藝', 'lifestyle'),
+('園藝', 'lifestyle'),
+('手作', 'lifestyle'),
+('手作', 'lifestyle'),
+('收集', 'lifestyle'),
+('收集', 'lifestyle'),
+('志工服務', 'lifestyle'),
+('志工服務', 'lifestyle'),
+('冥想', 'lifestyle');
 
-('園藝', 'lifestyle'),('園藝', 'lifestyle'),
-
-('手作', 'lifestyle'),('手作', 'lifestyle'),
-
-('收集', 'lifestyle'),('收集', 'lifestyle'),
-
-('志工服務', 'lifestyle'),('志工服務', 'lifestyle'),
-
-('冥想', 'lifestyle');('冥想', 'lifestyle');
-
-
+('冥想', 'lifestyle');
 
 -- 創建管理員用戶 (測試用)-- 創建管理員用戶 (測試用)
 
-INSERT IGNORE INTO users (email, password_hash, birth_date, is_verified, is_active) VALUESINSERT IGNORE INTO users (email, password_hash, birth_date, is_verified, is_active) VALUES
+INSERT IGNORE INTO
+    users (
+        email,
+        password_hash,
+        birth_date,
+        is_verified,
+        is_active
+    ) VALUESINSERT IGNORE INTO users (
+        email,
+        password_hash,
+        birth_date,
+        is_verified,
+        is_active
+    )
+VALUES (
+        'admin@dating.app',
+        '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPFPMB7xOQPhm',
+        '1990-01-01',
+        TRUE,
+        TRUE
+    );
 
-('admin@dating.app', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPFPMB7xOQPhm', '1990-01-01', TRUE, TRUE);('admin@dating.app', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPFPMB7xOQPhm', '1990-01-01', TRUE, TRUE);
+(
+    'admin@dating.app',
+    '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPFPMB7xOQPhm',
+    '1990-01-01',
+    TRUE,
+    TRUE
+);
 
+SET @admin_user_id = LAST_INSERT_ID();
 
+SET @admin_user_id = LAST_INSERT_ID();
 
-SET @admin_user_id = LAST_INSERT_ID();SET @admin_user_id = LAST_INSERT_ID();
+INSERT IGNORE INTO
+    user_profiles (
+        user_id,
+        display_name,
+        bio,
+        gender,
+        show_age
+    ) VALUESINSERT IGNORE INTO user_profiles (
+        user_id,
+        display_name,
+        bio,
+        gender,
+        show_age
+    )
+VALUES (
+        @admin_user_id,
+        '系統管理員',
+        '系統管理員帳戶',
+        'other',
+        FALSE
+    );
 
+( @admin_user_id, '系統管理員', '系統管理員帳戶', 'other', FALSE );
 
-
-INSERT IGNORE INTO user_profiles (user_id, display_name, bio, gender, show_age) VALUESINSERT IGNORE INTO user_profiles (user_id, display_name, bio, gender, show_age) VALUES
-
-(@admin_user_id, '系統管理員', '系統管理員帳戶', 'other', FALSE);(@admin_user_id, '系統管理員', '系統管理員帳戶', 'other', FALSE);
-    personality_type VARCHAR(50),
+personality_type VARCHAR(50),
     zodiac VARCHAR(50),
     religion VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
