@@ -67,17 +67,17 @@
 - [x] T007 [P] 合約測試 GET /users/profile 在 tests/contract/profile_get_test.go
 - [x] T008 [P] 合約測試 PUT /users/profile 在 tests/contract/profile_update_test.go
 - [x] T009 [P] 合約測試 POST /users/photos 在 tests/contract/photos_upload_test.go
-- [ ] T010 [P] 合約測試 GET /matching/potential 在 tests/contract/test_matching_get.go
-- [ ] T011 [P] 合約測試 POST /matching/swipe 在 tests/contract/test_matching_swipe.go
-- [ ] T012 [P] 合約測試 GET /chat/matches 在 tests/contract/test_chat_matches.go
-- [ ] T013 [P] 合約測試 POST /chat/messages 在 tests/contract/test_chat_send.go
+- [x] T010 [P] 合約測試 GET /matching/potential 在 tests/contract/matching_get_test.go
+- [x] T011 [P] 合約測試 POST /matching/swipe 在 tests/contract/matching_swipe_test.go
+- [x] T012 [P] 合約測試 GET /chat/matches 在 tests/contract/chat_matches_test.go
+- [x] T013 [P] 合約測試 POST /chat/messages 在 tests/contract/chat_send_test.go
 
 ### 整合測試
 
-- [ ] T014 [P] 整合測試用戶註冊流程（18+驗證）在 tests/integration/test_user_registration.go
-- [ ] T015 [P] 整合測試配對演算法在 tests/integration/test_matching_algorithm.go
-- [ ] T016 [P] 整合測試 WebSocket 聊天在 tests/integration/test_websocket_chat.go
-- [ ] T017 [P] 整合測試檢舉系統在 tests/integration/test_report_system.go
+- [ ] T014 [P] 整合測試用戶註冊流程（18+驗證）在 tests/integration/user_registration_test.go
+- [ ] T015 [P] 整合測試配對演算法在 tests/integration/matching_algorithm_test.go
+- [ ] T016 [P] 整合測試 WebSocket 聊天在 tests/integration/websocket_chat_test.go
+- [ ] T017 [P] 整合測試檢舉系統在 tests/integration/report_system_test.go
 
 ## Phase 3.3: 核心實作（只有在測試失敗後）
 
@@ -172,10 +172,10 @@
 
 ### 單元測試
 
-- [ ] T070 [P] User 實體單元測試在 tests/unit/test_user_entity.go
-- [ ] T071 [P] UserService 單元測試在 tests/unit/test_user_service.go
-- [ ] T072 [P] MatchingService 單元測試在 tests/unit/test_matching_service.go
-- [ ] T073 [P] 年齡驗證單元測試在 tests/unit/test_age_validation.go
+- [ ] T070 [P] User 實體單元測試在 tests/unit/user_entity_test.go
+- [ ] T071 [P] UserService 單元測試在 tests/unit/user_service_test.go
+- [ ] T072 [P] MatchingService 單元測試在 tests/unit/matching_service_test.go
+- [ ] T073 [P] 年齡驗證單元測試在 tests/unit/age_validation_test.go
 
 ### 效能與安全
 
@@ -221,15 +221,15 @@
 
 ```bash
 # 同時啟動 T005-T013：
-Task: "合約測試 POST /api/auth/register 在 tests/contract/test_auth_register.go"
-Task: "合約測試 POST /api/auth/login 在 tests/contract/test_auth_login.go"
-Task: "合約測試 GET /users/profile 在 tests/contract/test_profile_get.go"
-Task: "合約測試 PUT /users/profile 在 tests/contract/test_profile_update.go"
-Task: "合約測試 POST /users/photos 在 tests/contract/test_photos_upload.go"
-Task: "合約測試 GET /matching/potential 在 tests/contract/test_matching_get.go"
-Task: "合約測試 POST /matching/swipe 在 tests/contract/test_matching_swipe.go"
-Task: "合約測試 GET /chat/matches 在 tests/contract/test_chat_matches.go"
-Task: "合約測試 POST /chat/messages 在 tests/contract/test_chat_send.go"
+Task: "合約測試 POST /api/auth/register 在 tests/contract/auth_register_test.go"
+Task: "合約測試 POST /api/auth/login 在 tests/contract/auth_login_test.go"
+Task: "合約測試 GET /users/profile 在 tests/contract/profile_get_test.go"
+Task: "合約測試 PUT /users/profile 在 tests/contract/profile_update_test.go"
+Task: "合約測試 POST /users/photos 在 tests/contract/photos_upload_test.go"
+Task: "合約測試 GET /matching/potential 在 tests/contract/matching_get_test.go"
+Task: "合約測試 POST /matching/swipe 在 tests/contract/matching_swipe_test.go"
+Task: "合約測試 GET /chat/matches 在 tests/contract/chat_matches_test.go"
+Task: "合約測試 POST /chat/messages 在 tests/contract/chat_send_test.go"
 ```
 
 ### 階段 3.3：實體模型（並行）
