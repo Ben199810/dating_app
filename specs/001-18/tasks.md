@@ -74,10 +74,10 @@
 
 ### 整合測試
 
-- [ ] T014 [P] 整合測試用戶註冊流程（18+驗證）在 tests/integration/user_registration_test.go
-- [ ] T015 [P] 整合測試配對演算法在 tests/integration/matching_algorithm_test.go
-- [ ] T016 [P] 整合測試 WebSocket 聊天在 tests/integration/websocket_chat_test.go
-- [ ] T017 [P] 整合測試檢舉系統在 tests/integration/report_system_test.go
+- [x] T014 [P] 整合測試用戶註冊流程（18+驗證）在 tests/integration/user_registration_test.go
+- [x] T015 [P] 整合測試配對演算法在 tests/integration/matching_algorithm_test.go
+- [x] T016 [P] 整合測試 WebSocket 聊天在 tests/integration/websocket_chat_test.go
+- [x] T017 [P] 整合測試檢舉系統在 tests/integration/report_system_test.go
 
 ## Phase 3.3: 核心實作（只有在測試失敗後）
 

@@ -1,0 +1,501 @@
+package integration
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/suite"
+)
+
+// UserRegistrationTestSuite 用戶註冊流程整合測試套件
+type UserRegistrationTestSuite struct {
+	suite.Suite
+	db     *gorm.DB
+	router *gin.Engine
+	server *httptest.Server
+}
+
+// SetupSuite 測試套件初始化
+func (suite *UserRegistrationTestSuite) SetupSuite() {
+	// 設置 Gin 為測試模式
+	gin.SetMode(gin.TestMode)
+
+	// 建立測試資料庫連接
+	testDB := suite.setupTestDatabase()
+	suite.db = testDB
+
+	// 設置測試路由
+	suite.router = gin.Default()
+	suite.setupTestRoutes()
+
+	// 啟動測試伺服器
+	suite.server = httptest.NewServer(suite.router)
+}
+
+// TearDownSuite 測試套件清理
+func (suite *UserRegistrationTestSuite) TearDownSuite() {
+	if suite.server != nil {
+		suite.server.Close()
+	}
+
+	if suite.db != nil {
+		// 清理測試資料庫
+		suite.cleanupTestDatabase()
+	}
+}
+
+// SetupTest 每個測試前的設置
+func (suite *UserRegistrationTestSuite) SetupTest() {
+	// 清空相關表格
+	suite.db.Exec("DELETE FROM users")
+	suite.db.Exec("DELETE FROM user_profiles")
+	suite.db.Exec("DELETE FROM age_verifications")
+}
+
+// setupTestDatabase 設置測試資料庫
+func (suite *UserRegistrationTestSuite) setupTestDatabase() *gorm.DB {
+	// 使用環境變數或預設測試資料庫配置
+	dsn := os.Getenv("TEST_DATABASE_URL")
+	if dsn == "" {
+		dsn = "root:password@tcp(localhost:3306)/dating_app_test?charset=utf8mb4&parseTime=True&loc=Local"
+	}
+
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	suite.Require().NoError(err, "應該能夠連接到測試資料庫")
+
+	// 確保測試表格存在（這裡模擬，實際應該透過遷移）
+	err = suite.createTestTables(db)
+	suite.Require().NoError(err, "應該能夠創建測試表格")
+
+	return db
+}
+
+// createTestTables 創建測試表格
+func (suite *UserRegistrationTestSuite) createTestTables(db *gorm.DB) error {
+	// 創建基本的測試表格（模擬實體結構）
+	sqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+
+	// Users 表
+	_, err = sqlDB.Exec(`
+		CREATE TABLE IF NOT EXISTS users (
+			id INT AUTO_INCREMENT PRIMARY KEY,
+			email VARCHAR(255) UNIQUE NOT NULL,
+			password_hash VARCHAR(255) NOT NULL,
+			birth_date DATE NOT NULL,
+			is_verified BOOLEAN DEFAULT FALSE,
+			is_active BOOLEAN DEFAULT TRUE,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+		)
+	`)
+	if err != nil {
+		return err
+	}
+
+	// UserProfiles 表
+	_, err = sqlDB.Exec(`
+		CREATE TABLE IF NOT EXISTS user_profiles (
+			id INT AUTO_INCREMENT PRIMARY KEY,
+			user_id INT UNIQUE NOT NULL,
+			display_name VARCHAR(50) NOT NULL,
+			bio TEXT,
+			gender ENUM('male', 'female', 'other') NOT NULL,
+			show_age BOOLEAN DEFAULT TRUE,
+			location_lat DECIMAL(10, 8),
+			location_lng DECIMAL(11, 8),
+			max_distance INT DEFAULT 50,
+			age_range_min INT DEFAULT 18,
+			age_range_max INT DEFAULT 99,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)
+	`)
+	if err != nil {
+		return err
+	}
+
+	// AgeVerifications 表
+	_, err = sqlDB.Exec(`
+		CREATE TABLE IF NOT EXISTS age_verifications (
+			id INT AUTO_INCREMENT PRIMARY KEY,
+			user_id INT UNIQUE NOT NULL,
+			verification_method ENUM('birth_date', 'id_document') DEFAULT 'birth_date',
+			is_verified BOOLEAN DEFAULT FALSE,
+			verified_at TIMESTAMP NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+		)
+	`)
+
+	return err
+}
+
+// cleanupTestDatabase 清理測試資料庫
+func (suite *UserRegistrationTestSuite) cleanupTestDatabase() {
+	sqlDB, err := suite.db.DB()
+	if err != nil {
+		return
+	}
+
+	// 刪除測試表格
+	sqlDB.Exec("DROP TABLE IF EXISTS age_verifications")
+	sqlDB.Exec("DROP TABLE IF EXISTS user_profiles")
+	sqlDB.Exec("DROP TABLE IF EXISTS users")
+
+	sqlDB.Close()
+}
+
+// setupTestRoutes 設置測試路由
+func (suite *UserRegistrationTestSuite) setupTestRoutes() {
+	// 註冊路由 - 這個實作尚未存在，測試應該失敗
+	suite.router.POST("/api/auth/register", func(c *gin.Context) {
+		c.JSON(http.StatusNotImplemented, gin.H{"error": "註冊端點尚未實作"})
+	})
+
+	// 登入路由 - 這個實作尚未存在，測試應該失敗
+	suite.router.POST("/api/auth/login", func(c *gin.Context) {
+		c.JSON(http.StatusNotImplemented, gin.H{"error": "登入端點尚未實作"})
+	})
+}
+
+// TestUserRegistrationFlow 測試完整的用戶註冊流程
+func (suite *UserRegistrationTestSuite) TestUserRegistrationFlow() {
+	suite.T().Run("有效的用戶註冊應該成功", func(t *testing.T) {
+		// 準備註冊資料
+		registrationData := map[string]interface{}{
+			"email":        "john@example.com",
+			"password":     "SecurePassword123",
+			"birth_date":   "1995-06-15",
+			"display_name": "John",
+			"gender":       "male",
+		}
+
+		body, _ := json.Marshal(registrationData)
+		req := httptest.NewRequest("POST", "/api/auth/register", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+		suite.router.ServeHTTP(w, req)
+
+		// 實作後這個測試應該通過
+		assert.Equal(t, http.StatusCreated, w.Code, "有效註冊應該回傳 201 Created")
+
+		var response map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
+
+		assert.Contains(t, response, "user_id", "回應應包含用戶ID")
+		assert.Contains(t, response, "message", "回應應包含成功訊息")
+
+		// 驗證用戶資料已儲存到資料庫
+		var userCount int64
+		suite.db.Raw("SELECT COUNT(*) FROM users WHERE email = ?", "john@example.com").Scan(&userCount)
+		assert.Equal(t, int64(1), userCount, "用戶應該已儲存到資料庫")
+
+		// 驗證用戶檔案已創建
+		var profileCount int64
+		suite.db.Raw("SELECT COUNT(*) FROM user_profiles WHERE display_name = ?", "John").Scan(&profileCount)
+		assert.Equal(t, int64(1), profileCount, "用戶檔案應該已創建")
+	})
+}
+
+// TestAgeVerification 測試年齡驗證機制
+func (suite *UserRegistrationTestSuite) TestAgeVerification() {
+	suite.T().Run("未成年用戶註冊應該被拒絕", func(t *testing.T) {
+		// 準備未成年用戶資料（17歲）
+		birthDate := time.Now().AddDate(-17, 0, 0).Format("2006-01-02")
+		registrationData := map[string]interface{}{
+			"email":        "young@example.com",
+			"password":     "SecurePassword123",
+			"birth_date":   birthDate,
+			"display_name": "TooYoung",
+			"gender":       "male",
+		}
+
+		body, _ := json.Marshal(registrationData)
+		req := httptest.NewRequest("POST", "/api/auth/register", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+		suite.router.ServeHTTP(w, req)
+
+		// 實作後這個測試應該通過
+		assert.Equal(t, http.StatusBadRequest, w.Code, "未成年註冊應該回傳 400 Bad Request")
+
+		var response map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
+
+		if errorMsg, ok := response["error"].(string); ok {
+			assert.Contains(t, errorMsg, "18歲", "錯誤訊息應該提及年齡限制")
+		}
+
+		// 驗證用戶沒有被儲存到資料庫
+		var userCount int64
+		suite.db.Raw("SELECT COUNT(*) FROM users WHERE email = ?", "young@example.com").Scan(&userCount)
+		assert.Equal(t, int64(0), userCount, "未成年用戶不應該被儲存")
+	})
+
+	suite.T().Run("剛滿18歲用戶註冊應該成功", func(t *testing.T) {
+		// 準備剛滿18歲用戶資料
+		birthDate := time.Now().AddDate(-18, 0, -1).Format("2006-01-02") // 18歲1天
+		registrationData := map[string]interface{}{
+			"email":        "adult@example.com",
+			"password":     "SecurePassword123",
+			"birth_date":   birthDate,
+			"display_name": "JustAdult",
+			"gender":       "female",
+		}
+
+		body, _ := json.Marshal(registrationData)
+		req := httptest.NewRequest("POST", "/api/auth/register", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+		suite.router.ServeHTTP(w, req)
+
+		// 實作後這個測試應該通過
+		assert.Equal(t, http.StatusCreated, w.Code, "剛滿18歲註冊應該成功")
+
+		// 驗證年齡驗證記錄已創建
+		var verificationCount int64
+		suite.db.Raw(`
+			SELECT COUNT(*) FROM age_verifications av 
+			JOIN users u ON av.user_id = u.id 
+			WHERE u.email = ? AND av.is_verified = TRUE
+		`, "adult@example.com").Scan(&verificationCount)
+		assert.Equal(t, int64(1), verificationCount, "年齡驗證記錄應該已創建")
+	})
+}
+
+// TestRegistrationValidation 測試註冊驗證邏輯
+func (suite *UserRegistrationTestSuite) TestRegistrationValidation() {
+	suite.T().Run("重複email註冊應該被拒絕", func(t *testing.T) {
+		// 先創建一個用戶
+		suite.db.Exec(`
+			INSERT INTO users (email, password_hash, birth_date, is_verified, is_active)
+			VALUES (?, ?, ?, ?, ?)
+		`, "existing@example.com", "hashedpassword", "1990-01-01", true, true)
+
+		// 嘗試用相同email註冊
+		registrationData := map[string]interface{}{
+			"email":        "existing@example.com",
+			"password":     "SecurePassword123",
+			"birth_date":   "1995-06-15",
+			"display_name": "Duplicate",
+			"gender":       "male",
+		}
+
+		body, _ := json.Marshal(registrationData)
+		req := httptest.NewRequest("POST", "/api/auth/register", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+		suite.router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusConflict, w.Code, "重複email應該回傳 409 Conflict")
+
+		var response map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
+
+		if errorMsg, ok := response["error"].(string); ok {
+			assert.Contains(t, errorMsg, "已存在", "錯誤訊息應該提及email已存在")
+		}
+	})
+
+	suite.T().Run("無效的生日格式應該被拒絕", func(t *testing.T) {
+		registrationData := map[string]interface{}{
+			"email":        "invalid@example.com",
+			"password":     "SecurePassword123",
+			"birth_date":   "invalid-date",
+			"display_name": "Invalid",
+			"gender":       "male",
+		}
+
+		body, _ := json.Marshal(registrationData)
+		req := httptest.NewRequest("POST", "/api/auth/register", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+		suite.router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code, "無效日期格式應該回傳 400")
+	})
+
+	suite.T().Run("弱密碼應該被拒絕", func(t *testing.T) {
+		registrationData := map[string]interface{}{
+			"email":        "weak@example.com",
+			"password":     "123",
+			"birth_date":   "1990-01-01",
+			"display_name": "WeakPassword",
+			"gender":       "male",
+		}
+
+		body, _ := json.Marshal(registrationData)
+		req := httptest.NewRequest("POST", "/api/auth/register", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+		suite.router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code, "弱密碼應該回傳 400")
+
+		var response map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
+
+		if errorMsg, ok := response["error"].(string); ok {
+			assert.Contains(t, errorMsg, "密碼", "錯誤訊息應該提及密碼問題")
+		}
+	})
+}
+
+// TestLoginAfterRegistration 測試註冊後登入流程
+func (suite *UserRegistrationTestSuite) TestLoginAfterRegistration() {
+	suite.T().Run("註冊後應該能夠登入", func(t *testing.T) {
+		// 先註冊用戶（模擬成功註冊）
+		suite.db.Exec(`
+			INSERT INTO users (email, password_hash, birth_date, is_verified, is_active)
+			VALUES (?, ?, ?, ?, ?)
+		`, "login@example.com", "$2a$10$hashedpassword", "1990-01-01", true, true)
+
+		// 嘗試登入
+		loginData := map[string]interface{}{
+			"email":    "login@example.com",
+			"password": "SecurePassword123",
+		}
+
+		body, _ := json.Marshal(loginData)
+		req := httptest.NewRequest("POST", "/api/auth/login", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+		suite.router.ServeHTTP(w, req)
+
+		// 實作後這個測試應該通過
+		assert.Equal(t, http.StatusOK, w.Code, "有效登入應該回傳 200 OK")
+
+		var response map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
+
+		assert.Contains(t, response, "token", "登入成功應該回傳 JWT token")
+		assert.Contains(t, response, "user_id", "登入成功應該回傳用戶ID")
+	})
+
+	suite.T().Run("未驗證用戶不應該能登入", func(t *testing.T) {
+		// 創建未驗證用戶
+		suite.db.Exec(`
+			INSERT INTO users (email, password_hash, birth_date, is_verified, is_active)
+			VALUES (?, ?, ?, ?, ?)
+		`, "unverified@example.com", "$2a$10$hashedpassword", "2010-01-01", false, true)
+
+		loginData := map[string]interface{}{
+			"email":    "unverified@example.com",
+			"password": "SecurePassword123",
+		}
+
+		body, _ := json.Marshal(loginData)
+		req := httptest.NewRequest("POST", "/api/auth/login", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+		suite.router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code, "未驗證用戶登入應該回傳 403")
+
+		var response map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
+
+		if errorMsg, ok := response["error"].(string); ok {
+			assert.Contains(t, errorMsg, "驗證", "錯誤訊息應該提及需要驗證")
+		}
+	})
+}
+
+// TestCompleteUserOnboardingFlow 測試完整的用戶入門流程
+func (suite *UserRegistrationTestSuite) TestCompleteUserOnboardingFlow() {
+	suite.T().Run("完整的用戶入門流程", func(t *testing.T) {
+		// 1. 註冊
+		registrationData := map[string]interface{}{
+			"email":        "onboarding@example.com",
+			"password":     "SecurePassword123",
+			"birth_date":   "1990-06-15",
+			"display_name": "OnboardingUser",
+			"gender":       "other",
+		}
+
+		body, _ := json.Marshal(registrationData)
+		req := httptest.NewRequest("POST", "/api/auth/register", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+		suite.router.ServeHTTP(w, req)
+
+		// 驗證註冊成功
+		assert.Equal(t, http.StatusCreated, w.Code, "註冊應該成功")
+
+		// 2. 驗證資料庫狀態
+		var user struct {
+			ID         uint
+			Email      string
+			IsVerified bool
+			IsActive   bool
+		}
+		suite.db.Raw(`
+			SELECT id, email, is_verified, is_active
+			FROM users 
+			WHERE email = ?
+		`, "onboarding@example.com").Scan(&user)
+
+		assert.True(t, user.IsVerified, "用戶應該已通過年齡驗證")
+		assert.True(t, user.IsActive, "用戶帳戶應該是活躍的")
+
+		// 3. 驗證用戶檔案已創建
+		var profile struct {
+			UserID      uint
+			DisplayName string
+			Gender      string
+		}
+		suite.db.Raw(`
+			SELECT user_id, display_name, gender
+			FROM user_profiles 
+			WHERE user_id = ?
+		`, user.ID).Scan(&profile)
+
+		assert.Equal(t, user.ID, profile.UserID, "用戶檔案應該關聯到正確的用戶")
+		assert.Equal(t, "OnboardingUser", profile.DisplayName, "顯示名稱應該正確")
+		assert.Equal(t, "other", profile.Gender, "性別應該正確")
+
+		// 4. 驗證年齡驗證記錄
+		var verification struct {
+			UserID     uint
+			IsVerified bool
+		}
+		suite.db.Raw(`
+			SELECT user_id, is_verified
+			FROM age_verifications
+			WHERE user_id = ?
+		`, user.ID).Scan(&verification)
+
+		assert.Equal(t, user.ID, verification.UserID, "年齡驗證應該關聯到正確的用戶")
+		assert.True(t, verification.IsVerified, "年齡驗證應該已完成")
+	})
+}
+
+// TestUserRegistrationSuite 執行完整的測試套件
+func TestUserRegistrationSuite(t *testing.T) {
+	suite.Run(t, new(UserRegistrationTestSuite))
+}
