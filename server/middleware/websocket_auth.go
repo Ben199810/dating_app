@@ -35,7 +35,7 @@ func (m *WebSocketAuthMiddleware) AuthenticateWebSocket() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 1. 從查詢參數獲取 token
 		token := c.Query("token")
-		
+
 		// 2. 如果查詢參數中沒有，則從 Authorization 標頭獲取
 		if token == "" {
 			authHeader := c.GetHeader("Authorization")
@@ -133,11 +133,11 @@ func (m *WebSocketAuthMiddleware) validateToken(tokenString string) (*JWTClaims,
 func (m *WebSocketAuthMiddleware) RateLimitMiddleware(connectionsPerMinute int) gin.HandlerFunc {
 	// 簡單的記憶體存儲，生產環境建議使用 Redis
 	connectionCounts := make(map[string][]time.Time)
-	
+
 	return func(c *gin.Context) {
 		clientIP := c.ClientIP()
 		now := time.Now()
-		
+
 		// 清理過期的記錄（超過1分鐘）
 		if records, exists := connectionCounts[clientIP]; exists {
 			var validRecords []time.Time
@@ -148,7 +148,7 @@ func (m *WebSocketAuthMiddleware) RateLimitMiddleware(connectionsPerMinute int) 
 			}
 			connectionCounts[clientIP] = validRecords
 		}
-		
+
 		// 檢查連接次數
 		if len(connectionCounts[clientIP]) >= connectionsPerMinute {
 			c.JSON(http.StatusTooManyRequests, gin.H{
@@ -158,10 +158,10 @@ func (m *WebSocketAuthMiddleware) RateLimitMiddleware(connectionsPerMinute int) 
 			c.Abort()
 			return
 		}
-		
+
 		// 記錄新的連接
 		connectionCounts[clientIP] = append(connectionCounts[clientIP], now)
-		
+
 		c.Next()
 	}
 }
@@ -170,13 +170,13 @@ func (m *WebSocketAuthMiddleware) RateLimitMiddleware(connectionsPerMinute int) 
 func (m *WebSocketAuthMiddleware) WebSocketCORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
-		
+
 		// 在生產環境中應該檢查允許的來源
 		allowedOrigins := []string{
 			"http://localhost:8080",
 			"https://your-domain.com",
 		}
-		
+
 		isAllowed := false
 		for _, allowed := range allowedOrigins {
 			if origin == allowed {
@@ -184,7 +184,7 @@ func (m *WebSocketAuthMiddleware) WebSocketCORSMiddleware() gin.HandlerFunc {
 				break
 			}
 		}
-		
+
 		if !isAllowed && origin != "" {
 			c.JSON(http.StatusForbidden, gin.H{
 				"error": "不允許的來源",
@@ -193,19 +193,19 @@ func (m *WebSocketAuthMiddleware) WebSocketCORSMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		
+
 		// 設置 CORS 標頭
 		c.Header("Access-Control-Allow-Origin", origin)
 		c.Header("Access-Control-Allow-Credentials", "true")
 		c.Header("Access-Control-Allow-Headers", "Authorization, Content-Type")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-		
+
 		// 處理 OPTIONS 預檢請求
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
-		
+
 		c.Next()
 	}
 }
@@ -230,18 +230,19 @@ func (m *WebSocketAuthMiddleware) UserStatusMiddleware() gin.HandlerFunc {
 		// 設置用戶最後活動時間
 		c.Set("last_activity", time.Now())
 		
+		// 暫時記錄用戶狀態檢查
+		fmt.Printf("用戶狀態檢查: 用戶 %v\n", userID)
+		
 		c.Next()
 	}
-}
-
-// WebSocketSecurityMiddleware 安全中間件
+}// WebSocketSecurityMiddleware 安全中間件
 func (m *WebSocketAuthMiddleware) WebSocketSecurityMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 設置安全標頭
 		c.Header("X-Content-Type-Options", "nosniff")
 		c.Header("X-Frame-Options", "DENY")
 		c.Header("X-XSS-Protection", "1; mode=block")
-		
+
 		// 檢查請求是否為 WebSocket 升級請求
 		if c.Request.Header.Get("Upgrade") != "websocket" {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -251,7 +252,7 @@ func (m *WebSocketAuthMiddleware) WebSocketSecurityMiddleware() gin.HandlerFunc 
 			c.Abort()
 			return
 		}
-		
+
 		// 檢查連接標頭
 		if c.Request.Header.Get("Connection") != "Upgrade" {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -261,7 +262,7 @@ func (m *WebSocketAuthMiddleware) WebSocketSecurityMiddleware() gin.HandlerFunc 
 			c.Abort()
 			return
 		}
-		
+
 		c.Next()
 	}
 }
@@ -287,21 +288,21 @@ func (m *WebSocketAuthMiddleware) LoggingMiddleware() gin.HandlerFunc {
 func (m *WebSocketAuthMiddleware) WebSocketMetricsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
-		
+
 		c.Next()
-		
+
 		// 記錄指標
 		duration := time.Since(start)
 		userID, exists := c.Get("user_id")
-		
+
 		// TODO: 發送指標到監控系統
 		// metrics.RecordWebSocketConnection(userID, duration, c.Writer.Status())
-		
+
 		if exists {
-			fmt.Printf("WebSocket 連接指標 - 用戶: %v, 耗時: %v, 狀態: %d\n", 
+			fmt.Printf("WebSocket 連接指標 - 用戶: %v, 耗時: %v, 狀態: %d\n",
 				userID, duration, c.Writer.Status())
 		} else {
-			fmt.Printf("WebSocket 連接指標 - 匿名用戶, 耗時: %v, 狀態: %d\n", 
+			fmt.Printf("WebSocket 連接指標 - 匿名用戶, 耗時: %v, 狀態: %d\n",
 				duration, c.Writer.Status())
 		}
 	}
@@ -310,13 +311,13 @@ func (m *WebSocketAuthMiddleware) WebSocketMetricsMiddleware() gin.HandlerFunc {
 // CreateAuthMiddlewareChain 建立完整的認證中間件鏈
 func (m *WebSocketAuthMiddleware) CreateAuthMiddlewareChain() []gin.HandlerFunc {
 	return []gin.HandlerFunc{
-		m.LoggingMiddleware(),                    // 記錄
-		m.WebSocketMetricsMiddleware(),          // 指標
-		m.WebSocketCORSMiddleware(),             // CORS
-		m.WebSocketSecurityMiddleware(),         // 安全
-		m.RateLimitMiddleware(10),               // 速率限制（每分鐘10次連接）
-		m.AuthenticateWebSocket(),               // JWT 認證
-		m.UserStatusMiddleware(),                // 用戶狀態檢查
+		m.LoggingMiddleware(),           // 記錄
+		m.WebSocketMetricsMiddleware(),  // 指標
+		m.WebSocketCORSMiddleware(),     // CORS
+		m.WebSocketSecurityMiddleware(), // 安全
+		m.RateLimitMiddleware(10),       // 速率限制（每分鐘10次連接）
+		m.AuthenticateWebSocket(),       // JWT 認證
+		m.UserStatusMiddleware(),        // 用戶狀態檢查
 	}
 }
 
@@ -345,7 +346,7 @@ func (m *WebSocketAuthMiddleware) ValidateUserPermission(requiredPermission stri
 		// }
 
 		fmt.Printf("用戶 %v 權限檢查: %s\n", userID, requiredPermission)
-		
+
 		c.Next()
 	}
 }

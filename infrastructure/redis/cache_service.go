@@ -103,26 +103,26 @@ func (c *CacheService) GetUserSwipeHistory(userID uint) ([]uint, error) {
 // AddToSwipeHistory 添加到滑動歷史
 func (c *CacheService) AddToSwipeHistory(userID, targetUserID uint) error {
 	key := c.key("match", "swipe_history", fmt.Sprintf("%d", userID))
-	
+
 	// 獲取現有歷史
 	var history []uint
 	c.client.GetJSON(key, &history)
-	
+
 	// 檢查是否已存在
 	for _, id := range history {
 		if id == targetUserID {
 			return nil // 已存在
 		}
 	}
-	
+
 	// 添加新的用戶ID
 	history = append(history, targetUserID)
-	
+
 	// 限制歷史記錄數量（保留最近 1000 個）
 	if len(history) > 1000 {
 		history = history[len(history)-1000:]
 	}
-	
+
 	return c.client.SetJSON(key, history, 24*time.Hour)
 }
 
@@ -162,7 +162,7 @@ func (c *CacheService) GetChatMessages(chatID uint, messages interface{}) error 
 // AddChatMessage 添加聊天訊息到快取
 func (c *CacheService) AddChatMessage(chatID uint, message interface{}) error {
 	key := c.key("chat", "messages", fmt.Sprintf("%d", chatID))
-	
+
 	// 使用列表推入新訊息
 	listKey := c.key("chat", "list", fmt.Sprintf("%d", chatID))
 	messageJSON, err := c.client.client.Get(c.client.ctx, key).Result()
@@ -178,13 +178,13 @@ func (c *CacheService) AddChatMessage(chatID uint, message interface{}) error {
 			return c.client.SetJSON(key, messages, time.Hour)
 		}
 	}
-	
+
 	// 如果快取不存在，直接推入列表
 	_, err = c.client.LPush(listKey, messageJSON)
 	if err != nil {
 		return err
 	}
-	
+
 	// 設置列表過期時間
 	return c.client.Expire(listKey, time.Hour)
 }
@@ -202,7 +202,7 @@ func (c *CacheService) GetUnreadMessageCount(userID, chatID uint) (int64, error)
 	if err != nil {
 		return 0, err
 	}
-	
+
 	// 轉換字符串為數字
 	var count int64
 	fmt.Sscanf(result, "%d", &count)
@@ -216,7 +216,7 @@ func (c *CacheService) IncrementUnreadMessageCount(userID, chatID uint) (int64, 
 	if err != nil {
 		return 0, err
 	}
-	
+
 	// 設置過期時間
 	c.client.Expire(key, 24*time.Hour)
 	return count, nil
@@ -244,12 +244,12 @@ func (c *CacheService) IncrementRateLimit(identifier string, expiration time.Dur
 	if err != nil {
 		return 0, err
 	}
-	
+
 	// 如果是新鍵，設置過期時間
 	if count == 1 {
 		c.client.Expire(key, expiration)
 	}
-	
+
 	return count, nil
 }
 
@@ -260,7 +260,7 @@ func (c *CacheService) GetRateLimit(identifier string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	
+
 	var count int64
 	fmt.Sscanf(result, "%d", &count)
 	return count, nil
@@ -328,7 +328,7 @@ func (c *CacheService) IncrementDailyStats(statType string, date string) (int64,
 	if err != nil {
 		return 0, err
 	}
-	
+
 	// 設置過期時間為 30 天
 	c.client.Expire(key, 30*24*time.Hour)
 	return count, nil
@@ -341,7 +341,7 @@ func (c *CacheService) GetDailyStats(statType string, date string) (int64, error
 	if err != nil {
 		return 0, err
 	}
-	
+
 	var count int64
 	fmt.Sscanf(result, "%d", &count)
 	return count, nil
@@ -358,11 +358,11 @@ func (c *CacheService) ClearUserCache(userID uint) error {
 		c.key("match", "swipe_history", fmt.Sprintf("%d", userID)),
 		c.key("match", "candidates", fmt.Sprintf("%d", userID)),
 	}
-	
+
 	for _, pattern := range patterns {
 		c.client.Delete(pattern)
 	}
-	
+
 	return nil
 }
 
@@ -372,11 +372,11 @@ func (c *CacheService) ClearChatCache(chatID uint) error {
 		c.key("chat", "messages", fmt.Sprintf("%d", chatID)),
 		c.key("chat", "list", fmt.Sprintf("%d", chatID)),
 	}
-	
+
 	for _, pattern := range patterns {
 		c.client.Delete(pattern)
 	}
-	
+
 	return nil
 }
 

@@ -120,10 +120,10 @@ func (m *JWTAuthMiddleware) RefreshTokenMiddleware() gin.HandlerFunc {
 		// 檢查 token 是否即將過期（剩餘時間少於30分鐘）
 		if claims, exists := c.Get("jwt_claims"); exists {
 			jwtClaims := claims.(*JWTClaims)
-			
+
 			if jwtClaims.ExpiresAt != nil {
 				timeUntilExpiry := time.Until(jwtClaims.ExpiresAt.Time)
-				
+
 				if timeUntilExpiry < 30*time.Minute {
 					// 生成新的 token
 					newToken, err := m.GenerateToken(
@@ -132,7 +132,7 @@ func (m *JWTAuthMiddleware) RefreshTokenMiddleware() gin.HandlerFunc {
 						jwtClaims.Email,
 						24*time.Hour, // 24小時有效期
 					)
-					
+
 					if err == nil {
 						c.Header("X-New-Token", newToken)
 					}
@@ -149,7 +149,7 @@ func (m *JWTAuthMiddleware) AdminAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 先執行基本認證
 		m.AuthMiddleware()(c)
-		
+
 		if c.IsAborted() {
 			return
 		}
@@ -315,13 +315,13 @@ func (m *JWTAuthMiddleware) ExtractTokenFromRequest(c *gin.Context) (string, err
 // SetTokenCookie 設置 token cookie
 func (m *JWTAuthMiddleware) SetTokenCookie(c *gin.Context, token string, maxAge int) {
 	c.SetCookie(
-		"auth_token",     // cookie 名稱
-		token,            // cookie 值
-		maxAge,           // 最大存活時間（秒）
-		"/",              // 路徑
-		"",               // 域名
-		false,            // 安全（生產環境應設為 true）
-		true,             // HTTP Only
+		"auth_token", // cookie 名稱
+		token,        // cookie 值
+		maxAge,       // 最大存活時間（秒）
+		"/",          // 路徑
+		"",           // 域名
+		false,        // 安全（生產環境應設為 true）
+		true,         // HTTP Only
 	)
 }
 
@@ -330,7 +330,7 @@ func (m *JWTAuthMiddleware) ClearTokenCookie(c *gin.Context) {
 	c.SetCookie(
 		"auth_token",
 		"",
-		-1,    // 立即過期
+		-1, // 立即過期
 		"/",
 		"",
 		false,

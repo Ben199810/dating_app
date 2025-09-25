@@ -141,7 +141,7 @@ func NewCORSMiddleware(config CORSConfig) *CORSMiddleware {
 func (c *CORSMiddleware) Handler() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		origin := ctx.Request.Header.Get("Origin")
-		
+
 		// 檢查來源是否被允許
 		if !c.isOriginAllowed(origin) {
 			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
@@ -314,7 +314,7 @@ func (c *CORSMiddleware) areHeadersAllowed(headers string) bool {
 // isHeaderAllowed 檢查單個標頭是否被允許
 func (c *CORSMiddleware) isHeaderAllowed(header string) bool {
 	header = strings.ToLower(header)
-	
+
 	for _, allowedHeader := range c.config.AllowHeaders {
 		if strings.ToLower(allowedHeader) == header || allowedHeader == "*" {
 			return true
@@ -344,7 +344,7 @@ func (c *CORSMiddleware) isHeaderAllowed(header string) bool {
 func (c *CORSMiddleware) WebSocketCORSMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		origin := ctx.Request.Header.Get("Origin")
-		
+
 		// 檢查來源
 		if !c.isOriginAllowed(origin) {
 			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{

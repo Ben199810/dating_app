@@ -145,15 +145,15 @@
 
 ### WebSocket 實作
 
-- [ ] T057 WebSocket 管理器在 server/websocket/manager.go
-- [ ] T058 [P] 聊天訊息廣播在 server/websocket/chat_handler.go
-- [ ] T059 [P] WebSocket 中間件在 server/middleware/websocket_auth.go
+- [x] T057 WebSocket 管理器在 server/websocket/manager.go
+- [x] T058 [P] 聊天訊息廣播在 server/websocket/chat_handler.go
+- [x] T059 [P] WebSocket 中間件在 server/middleware/websocket_auth.go
 
 ### 認證與授權
 
-- [ ] T060 JWT 中間件在 server/middleware/jwt_auth.go
-- [ ] T061 [P] 年齡驗證中間件在 server/middleware/age_verification.go
-- [ ] T062 [P] API 速率限制在 server/middleware/rate_limit.go
+- [x] T060 JWT 中間件在 server/middleware/jwt_auth.go
+- [x] T061 [P] 年齡驗證中間件在 server/middleware/age_verification.go
+- [x] T062 [P] API 速率限制在 server/middleware/rate_limit.go
 
 ### Redis 快取
 

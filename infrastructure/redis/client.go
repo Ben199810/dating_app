@@ -60,7 +60,6 @@ func NewRedisClient(config *RedisConfig) (*RedisClient, error) {
 		DialTimeout:  config.DialTimeout,
 		ReadTimeout:  config.ReadTimeout,
 		WriteTimeout: config.WriteTimeout,
-		IdleTimeout:  config.IdleTimeout,
 	})
 
 	ctx := context.Background()

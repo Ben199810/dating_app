@@ -18,18 +18,18 @@ type RateLimiter interface {
 
 // RateLimitStats 速率限制統計
 type RateLimitStats struct {
-	Requests  int           `json:"requests"`
-	Remaining int           `json:"remaining"`
-	ResetTime time.Time     `json:"reset_time"`
+	Requests   int           `json:"requests"`
+	Remaining  int           `json:"remaining"`
+	ResetTime  time.Time     `json:"reset_time"`
 	RetryAfter time.Duration `json:"retry_after"`
 }
 
 // TokenBucketLimiter 令牌桶限制器
 type TokenBucketLimiter struct {
-	buckets map[string]*TokenBucket
-	mu      sync.RWMutex
-	rate    int           // 每秒補充的令牌數
-	capacity int          // 桶的容量
+	buckets  map[string]*TokenBucket
+	mu       sync.RWMutex
+	rate     int           // 每秒補充的令牌數
+	capacity int           // 桶的容量
 	window   time.Duration // 時間窗口
 }
 
@@ -93,7 +93,7 @@ func (t *TokenBucketLimiter) Allow(key string) bool {
 func (t *TokenBucketLimiter) Reset(key string) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	
+
 	delete(t.buckets, key)
 }
 
@@ -136,9 +136,9 @@ type SlidingWindowLimiter struct {
 
 // SlidingWindow 滑動時間窗口
 type SlidingWindow struct {
-	requests  []time.Time
-	limit     int
-	window    time.Duration
+	requests []time.Time
+	limit    int
+	window   time.Duration
 }
 
 // NewSlidingWindowLimiter 建立新的滑動時間窗口限制器
@@ -191,7 +191,7 @@ func (s *SlidingWindowLimiter) Allow(key string) bool {
 func (s *SlidingWindowLimiter) Reset(key string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	delete(s.windows, key)
 }
 
@@ -280,7 +280,7 @@ func (r *RateLimitMiddleware) WithOnLimit(onLimit func(*gin.Context, RateLimitSt
 func (r *RateLimitMiddleware) Handler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		key := r.keyFunc(c)
-		
+
 		if !r.limiter.Allow(key) {
 			stats := r.limiter.GetStats(key)
 			r.onLimit(c, stats)
@@ -307,7 +307,7 @@ func defaultOnLimit(c *gin.Context, stats RateLimitStats) {
 	c.Header("X-RateLimit-Limit", fmt.Sprintf("%d", stats.Requests+stats.Remaining))
 	c.Header("X-RateLimit-Remaining", "0")
 	c.Header("X-RateLimit-Reset", fmt.Sprintf("%d", stats.ResetTime.Unix()))
-	
+
 	if stats.RetryAfter > 0 {
 		c.Header("Retry-After", fmt.Sprintf("%.0f", stats.RetryAfter.Seconds()))
 	}

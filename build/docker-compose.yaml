@@ -7,7 +7,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - APP_ENV=development # 使用 development 配置
+      - APP_ENV=production # 使用 production 配置以便連接到容器
       - JWT_SECRET_KEY=your-super-secure-jwt-secret-key-change-in-production
       - MIN_AGE_REQUIREMENT=18
     depends_on:
@@ -31,7 +31,6 @@ services:
       MYSQL_PASSWORD: dating_password
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - dating_network
     healthcheck:

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -60,11 +61,13 @@ type DatabaseManager struct {
 
 // NewDatabaseManager 建立新的資料庫管理器
 func NewDatabaseManager(config *DatabaseConfig) (*DatabaseManager, error) {
+	log.Printf("資料庫配置: Host=%s, Port=%d, Database=%s, Username=%s", 
+		config.Host, config.Port, config.Database, config.Username)
 	dsn := buildDSN(config)
-	
+
 	// 配置 GORM logger
 	gormLogger := getGormLogger(config.LogLevel, config.SlowThreshold)
-	
+
 	// 連接資料庫
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger:                                   gormLogger,
@@ -98,13 +101,15 @@ func NewDatabaseManager(config *DatabaseConfig) (*DatabaseManager, error) {
 	}
 
 	log.Printf("資料庫連接成功: %s:%d/%s", config.Host, config.Port, config.Database)
-	
+
 	return manager, nil
 }
 
 // buildDSN 建立資料庫連接字符串
 func buildDSN(config *DatabaseConfig) string {
-	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&collation=%s&parseTime=true&loc=%s",
+	// URL 編碼時區以處理斜線
+	timezone := strings.ReplaceAll(config.Timezone, "/", "%2F")
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&collation=%s&parseTime=true&loc=%s",
 		config.Username,
 		config.Password,
 		config.Host,
@@ -112,8 +117,10 @@ func buildDSN(config *DatabaseConfig) string {
 		config.Database,
 		config.Charset,
 		config.Collation,
-		config.Timezone,
+		timezone,
 	)
+	log.Printf("建立的 DSN: %s", dsn)
+	return dsn
 }
 
 // getGormLogger 獲取 GORM logger
@@ -281,10 +288,10 @@ func (dm *DatabaseManager) RepairTable(tableName string) error {
 // GetTableSize 獲取表格大小
 func (dm *DatabaseManager) GetTableSize(tableName string) (map[string]interface{}, error) {
 	var result struct {
-		TableName  string `json:"table_name"`
-		DataLength int64  `json:"data_length"`
+		TableName   string `json:"table_name"`
+		DataLength  int64  `json:"data_length"`
 		IndexLength int64  `json:"index_length"`
-		TableRows  int64  `json:"table_rows"`
+		TableRows   int64  `json:"table_rows"`
 	}
 
 	sql := `

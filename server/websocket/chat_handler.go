@@ -43,9 +43,9 @@ type MessageReadData struct {
 
 // OnlineStatusData 在線狀態數據結構
 type OnlineStatusData struct {
-	UserID    uint      `json:"user_id"`
-	IsOnline  bool      `json:"is_online"`
-	LastSeen  time.Time `json:"last_seen"`
+	UserID   uint      `json:"user_id"`
+	IsOnline bool      `json:"is_online"`
+	LastSeen time.Time `json:"last_seen"`
 }
 
 // BroadcastNewMessage 廣播新聊天訊息
@@ -75,7 +75,7 @@ func (h *ChatHandler) BroadcastTypingStatus(chatID, senderID uint, isTyping bool
 	// 發送到聊天室的其他參與者（不包括發送者）
 	h.broadcastToChatExceptSender(chatID, senderID, "typing_status", typingData)
 
-	log.Printf("廣播輸入狀態到聊天室 %d: 用戶 %d %s", chatID, senderID, 
+	log.Printf("廣播輸入狀態到聊天室 %d: 用戶 %d %s", chatID, senderID,
 		map[bool]string{true: "開始輸入", false: "停止輸入"}[isTyping])
 }
 
@@ -106,7 +106,7 @@ func (h *ChatHandler) BroadcastUserOnlineStatus(userID uint, isOnline bool, chat
 		h.broadcastToChatExceptSender(chatID, userID, "user_online_status", statusData)
 	}
 
-	log.Printf("廣播用戶在線狀態: 用戶 %d %s", userID, 
+	log.Printf("廣播用戶在線狀態: 用戶 %d %s", userID,
 		map[bool]string{true: "上線", false: "離線"}[isOnline])
 }
 
