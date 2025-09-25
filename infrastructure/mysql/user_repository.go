@@ -1,456 +1,395 @@
 package mysql
 
 import (
-	"database/sql"
+	"context"
+	"fmt"
+
 	"golang_dev_docker/domain/entity"
 	"golang_dev_docker/domain/repository"
-	"strings"
+
+	"gorm.io/gorm"
 )
 
-// baseRepository 提供基礎的資料庫操作能力
-type baseRepository struct {
-	db *sql.DB
+// MySQLUserRepository MySQL 用戶儲存庫實作
+type MySQLUserRepository struct {
+	db *gorm.DB
 }
 
-// userRepository 專注於用戶相關的 CRUD 操作
-type userRepository struct {
-	baseRepository
-	entityMapper *UserEntityMapper
+// NewUserRepository 創建新的 MySQL 用戶儲存庫
+func NewUserRepository(db *gorm.DB) repository.UserRepository {
+	return &MySQLUserRepository{db: db}
 }
 
-// authRepository 專注於認證相關操作
-type authRepository struct {
-	baseRepository
-}
-
-// repository.UserRepository 定義了這個 struct 需要實現的方法
-func NewUserRepository(db *sql.DB) (repository.UserRepository, repository.AuthRepository) {
-	base := baseRepository{db: db}
-	userRepo := &userRepository{
-		baseRepository: base,
-		entityMapper:   NewUserEntityMapper(),
+// Create 創建新用戶
+func (r *MySQLUserRepository) Create(ctx context.Context, user *entity.User) error {
+	if err := r.db.WithContext(ctx).Create(user).Error; err != nil {
+		return fmt.Errorf("創建用戶失敗: %w", err)
 	}
-	authRepo := &authRepository{baseRepository: base}
-	return userRepo, authRepo
-}
-
-func (r *userRepository) CreateUser(user *entity.UserInformation) error {
-	query := `
-        INSERT INTO users (
-            username, email, password, age, gender, is_verified,
-            status, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-    `
-
-	// 使用 EntityMapper 準備插入資料
-	values, err := r.entityMapper.PrepareForInsert(user)
-	if err != nil {
-		return err
-	}
-
-	result, err := r.db.Exec(query, values...)
-	if err != nil {
-		return err
-	}
-
-	// 取得新建立的 ID
-	id, err := result.LastInsertId()
-	if err != nil {
-		return err
-	}
-
-	user.ID = int(id)
 	return nil
 }
 
-func (r *userRepository) GetUserByEmail(email string) (*entity.UserInformation, error) {
-	query := `
-        SELECT id, username, email, password, age, gender, is_verified,
-               status, last_active_at, created_at, updated_at
-        FROM users 
-        WHERE email = ?
-    `
-
-	dbModel := &UserDBModel{}
-
-	err := r.db.QueryRow(query, email).Scan(
-		&dbModel.ID, &dbModel.Username, &dbModel.Email, &dbModel.Password,
-		&dbModel.Age, &dbModel.Gender,
-		&dbModel.IsVerified, &dbModel.Status, &dbModel.LastActiveAt,
-		&dbModel.CreatedAt, &dbModel.UpdatedAt,
-	)
-
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil // 找不到用戶，返回 nil 而不是錯誤
+// GetByID 根據 ID 獲取用戶
+func (r *MySQLUserRepository) GetByID(ctx context.Context, id uint) (*entity.User, error) {
+	var user entity.User
+	if err := r.db.WithContext(ctx).First(&user, id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("用戶不存在: %w", err)
 		}
-		return nil, err
+		return nil, fmt.Errorf("查詢用戶失敗: %w", err)
 	}
-
-	// 使用 EntityMapper 轉換為領域實體
-	user, err := r.entityMapper.ToEntity(dbModel)
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
+	return &user, nil
 }
 
-func (r *userRepository) GetUserByID(id int) (*entity.UserInformation, error) {
-	query := `
-        SELECT id, username, email, password, age, gender, is_verified,
-               status, last_active_at, created_at, updated_at
-        FROM users 
-        WHERE id = ?
-    `
-
-	dbModel := &UserDBModel{}
-
-	err := r.db.QueryRow(query, id).Scan(
-		&dbModel.ID, &dbModel.Username, &dbModel.Email, &dbModel.Password,
-		&dbModel.Age, &dbModel.Gender,
-		&dbModel.IsVerified, &dbModel.Status, &dbModel.LastActiveAt,
-		&dbModel.CreatedAt, &dbModel.UpdatedAt,
-	)
-
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
+// GetByEmail 根據 Email 獲取用戶
+func (r *MySQLUserRepository) GetByEmail(ctx context.Context, email string) (*entity.User, error) {
+	var user entity.User
+	if err := r.db.WithContext(ctx).Where("email = ?", email).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("用戶不存在: %w", err)
 		}
-		return nil, err
+		return nil, fmt.Errorf("查詢用戶失敗: %w", err)
 	}
-
-	// 使用 EntityMapper 轉換為領域實體
-	user, err := r.entityMapper.ToEntity(dbModel)
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
+	return &user, nil
 }
 
-func (r *userRepository) UpdateUser(user *entity.UserInformation) error {
-	// 使用 EntityMapper 轉換為資料庫模型
-	dbModel, err := r.entityMapper.ToDBModel(user)
-	if err != nil {
-		return err
+// Update 更新用戶資訊
+func (r *MySQLUserRepository) Update(ctx context.Context, user *entity.User) error {
+	if err := r.db.WithContext(ctx).Save(user).Error; err != nil {
+		return fmt.Errorf("更新用戶失敗: %w", err)
 	}
-
-	query := `
-        UPDATE users 
-        SET username = ?, email = ?, age = ?, gender = ?,
-            is_verified = ?, status = ?, updated_at = NOW()
-        WHERE id = ?
-    `
-
-	_, err = r.db.Exec(query,
-		dbModel.Username, dbModel.Email, dbModel.Age, dbModel.Gender,
-		dbModel.IsVerified, dbModel.Status, dbModel.ID,
-	)
-	return err
+	return nil
 }
 
-func (r *userRepository) DeleteUser(id int) error {
-	query := "DELETE FROM users WHERE id = ?"
-	_, err := r.db.Exec(query, id)
-	return err
+// Delete 軟刪除用戶（設為非啟用狀態）
+func (r *MySQLUserRepository) Delete(ctx context.Context, id uint) error {
+	if err := r.db.WithContext(ctx).Model(&entity.User{}).Where("id = ?", id).Update("is_active", false).Error; err != nil {
+		return fmt.Errorf("刪除用戶失敗: %w", err)
+	}
+	return nil
 }
 
-// AuthRepository 介面實作 - 移到 authRepository 結構體
-func (r *authRepository) GetUserByEmail(email string) (*entity.UserInformation, error) {
-	query := `
-        SELECT id, username, email, password, created_at, updated_at 
-        FROM users 
-        WHERE email = ?
-    `
-
-	user := &entity.UserInformation{}
-	err := r.db.QueryRow(query, email).Scan(
-		&user.ID,
-		&user.Username,
-		&user.Email,
-		&user.Password,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-	)
-
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil // 找不到用戶，返回 nil 而不是錯誤
-		}
-		return nil, err
+// SetVerified 設定用戶驗證狀態
+func (r *MySQLUserRepository) SetVerified(ctx context.Context, id uint, verified bool) error {
+	if err := r.db.WithContext(ctx).Model(&entity.User{}).Where("id = ?", id).Update("is_verified", verified).Error; err != nil {
+		return fmt.Errorf("設定驗證狀態失敗: %w", err)
 	}
-
-	return user, nil
+	return nil
 }
 
-func (r *authRepository) GetUserByUsername(username string) (*entity.UserInformation, error) {
-	query := `
-        SELECT id, username, email, password, created_at, updated_at 
-        FROM users 
-        WHERE username = ?
-    `
-
-	user := &entity.UserInformation{}
-	err := r.db.QueryRow(query, username).Scan(
-		&user.ID,
-		&user.Username,
-		&user.Email,
-		&user.Password,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-	)
-
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
+// SetActive 設定用戶啟用狀態
+func (r *MySQLUserRepository) SetActive(ctx context.Context, id uint, active bool) error {
+	if err := r.db.WithContext(ctx).Model(&entity.User{}).Where("id = ?", id).Update("is_active", active).Error; err != nil {
+		return fmt.Errorf("設定啟用狀態失敗: %w", err)
 	}
-
-	return user, nil
+	return nil
 }
 
-func (r *authRepository) UpdateLastLoginTime(userID int) error {
-	query := `
-        UPDATE users 
-        SET updated_at = NOW() 
-        WHERE id = ?
-    `
-
-	_, err := r.db.Exec(query, userID)
-	return err
+// MySQLUserProfileRepository MySQL 用戶檔案儲存庫實作
+type MySQLUserProfileRepository struct {
+	db *gorm.DB
 }
 
-func (r *authRepository) UserExists(email, username string) (bool, error) {
-	query := `
-        SELECT COUNT(*) 
-        FROM users 
-        WHERE email = ? OR username = ?
-    `
-
-	var count int
-	err := r.db.QueryRow(query, email, username).Scan(&count)
-	if err != nil {
-		return false, err
-	}
-
-	return count > 0, nil
+// NewUserProfileRepository 創建新的 MySQL 用戶檔案儲存庫
+func NewUserProfileRepository(db *gorm.DB) repository.UserProfileRepository {
+	return &MySQLUserProfileRepository{db: db}
 }
 
-// 新增的交友軟體功能實現
-func (r *userRepository) GetUsersByLocation(lat, lng float64, radiusKm int, limit int) ([]*entity.UserInformation, error) {
-	// 使用 Haversine 公式計算距離
-	query := `
-		SELECT id, username, email, age, gender, is_verified,
-			   status, last_active_at, created_at, updated_at
-		FROM users 
-		WHERE id IN (
-			SELECT DISTINCT up.user_id 
-			FROM user_profiles up 
-			WHERE up.location_lat IS NOT NULL 
-			  AND up.location_lng IS NOT NULL
-			  AND (6371 * acos(cos(radians(?)) * cos(radians(up.location_lat)) * 
-			      cos(radians(up.location_lng) - radians(?)) + sin(radians(?)) * 
-			      sin(radians(up.location_lat)))) <= ?
-		)
-		AND status = 'active'
-		ORDER BY id
-		LIMIT ?
-	`
-
-	rows, err := r.db.Query(query, lat, lng, lat, radiusKm, limit)
-	if err != nil {
-		return nil, err
+// Create 創建用戶檔案
+func (r *MySQLUserProfileRepository) Create(ctx context.Context, profile *entity.UserProfile) error {
+	if err := r.db.WithContext(ctx).Create(profile).Error; err != nil {
+		return fmt.Errorf("創建用戶檔案失敗: %w", err)
 	}
-	defer rows.Close()
-
-	var users []*entity.UserInformation
-	for rows.Next() {
-		dbModel := &UserDBModel{}
-
-		err := rows.Scan(
-			&dbModel.ID, &dbModel.Username, &dbModel.Email, &dbModel.Age, &dbModel.Gender,
-			&dbModel.IsVerified, &dbModel.Status,
-			&dbModel.LastActiveAt, &dbModel.CreatedAt, &dbModel.UpdatedAt,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		// 使用 EntityMapper 轉換為領域實體
-		user, err := r.entityMapper.ToEntity(dbModel)
-		if err != nil {
-			return nil, err
-		}
-
-		users = append(users, user)
-	}
-
-	return users, nil
+	return nil
 }
 
-func (r *userRepository) GetUsersByAgeRange(minAge, maxAge int, limit int) ([]*entity.UserInformation, error) {
-	query := `
-		SELECT id, username, email, age, gender, is_verified,
-			   status, last_active_at, created_at, updated_at
-		FROM users 
-		WHERE age BETWEEN ? AND ?
-		  AND status = 'active'
-		ORDER BY last_active_at DESC
-		LIMIT ?
-	`
-
-	rows, err := r.db.Query(query, minAge, maxAge, limit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var users []*entity.UserInformation
-	for rows.Next() {
-		dbModel := &UserDBModel{}
-
-		err := rows.Scan(
-			&dbModel.ID, &dbModel.Username, &dbModel.Email, &dbModel.Age, &dbModel.Gender,
-			&dbModel.IsVerified, &dbModel.Status,
-			&dbModel.LastActiveAt, &dbModel.CreatedAt, &dbModel.UpdatedAt,
-		)
-		if err != nil {
-			return nil, err
+// GetByUserID 根據用戶 ID 獲取檔案
+func (r *MySQLUserProfileRepository) GetByUserID(ctx context.Context, userID uint) (*entity.UserProfile, error) {
+	var profile entity.UserProfile
+	if err := r.db.WithContext(ctx).Where("user_id = ?", userID).First(&profile).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("用戶檔案不存在: %w", err)
 		}
-
-		// 使用 EntityMapper 轉換為領域實體
-		user, err := r.entityMapper.ToEntity(dbModel)
-		if err != nil {
-			return nil, err
-		}
-
-		users = append(users, user)
+		return nil, fmt.Errorf("查詢用戶檔案失敗: %w", err)
 	}
-
-	return users, nil
+	return &profile, nil
 }
 
-func (r *userRepository) GetUsersByGender(gender entity.Gender, limit int) ([]*entity.UserInformation, error) {
-	query := `
-		SELECT id, username, email, age, gender, is_verified,
-			   status, last_active_at, created_at, updated_at
-		FROM users 
-		WHERE gender = ?
-		  AND status = 'active'
-		ORDER BY last_active_at DESC
-		LIMIT ?
-	`
-
-	rows, err := r.db.Query(query, gender, limit)
-	if err != nil {
-		return nil, err
+// Update 更新用戶檔案
+func (r *MySQLUserProfileRepository) Update(ctx context.Context, profile *entity.UserProfile) error {
+	if err := r.db.WithContext(ctx).Save(profile).Error; err != nil {
+		return fmt.Errorf("更新用戶檔案失敗: %w", err)
 	}
-	defer rows.Close()
-
-	var users []*entity.UserInformation
-	for rows.Next() {
-		dbModel := &UserDBModel{}
-
-		err := rows.Scan(
-			&dbModel.ID, &dbModel.Username, &dbModel.Email, &dbModel.Age, &dbModel.Gender,
-			&dbModel.IsVerified, &dbModel.Status,
-			&dbModel.LastActiveAt, &dbModel.CreatedAt, &dbModel.UpdatedAt,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		// 使用 EntityMapper 轉換為領域實體
-		user, err := r.entityMapper.ToEntity(dbModel)
-		if err != nil {
-			return nil, err
-		}
-
-		users = append(users, user)
-	}
-
-	return users, nil
+	return nil
 }
 
-func (r *userRepository) UpdateLastActiveTime(userID int) error {
-	query := `
-		UPDATE users 
-		SET last_active_at = NOW(), updated_at = NOW()
-		WHERE id = ?
-	`
-
-	_, err := r.db.Exec(query, userID)
-	return err
+// Delete 刪除用戶檔案
+func (r *MySQLUserProfileRepository) Delete(ctx context.Context, userID uint) error {
+	if err := r.db.WithContext(ctx).Where("user_id = ?", userID).Delete(&entity.UserProfile{}).Error; err != nil {
+		return fmt.Errorf("刪除用戶檔案失敗: %w", err)
+	}
+	return nil
 }
 
-func (r *userRepository) SearchUsers(filters map[string]interface{}, limit, offset int) ([]*entity.UserInformation, error) {
-	baseQuery := `
-		SELECT id, username, email, age, gender, is_verified,
-			   status, last_active_at, created_at, updated_at
-		FROM users 
-		WHERE status = 'active'
-	`
-
-	var conditions []string
-	var args []interface{}
-
-	// 動態建構 WHERE 條件
-	if ageMin, ok := filters["age_min"]; ok {
-		conditions = append(conditions, "age >= ?")
-		args = append(args, ageMin)
-	}
-	if ageMax, ok := filters["age_max"]; ok {
-		conditions = append(conditions, "age <= ?")
-		args = append(args, ageMax)
-	}
-	if gender, ok := filters["gender"]; ok {
-		conditions = append(conditions, "gender = ?")
-		args = append(args, gender)
-	}
-	if isVerified, ok := filters["is_verified"]; ok {
-		conditions = append(conditions, "is_verified = ?")
-		args = append(args, isVerified)
+// UpdateLocation 更新用戶位置資訊
+func (r *MySQLUserProfileRepository) UpdateLocation(ctx context.Context, userID uint, lat, lng *float64) error {
+	updates := map[string]interface{}{
+		"location_lat": lat,
+		"location_lng": lng,
 	}
 
-	// 移除 city 過濾器，因為 city 現在在 UserProfile 表中
+	if err := r.db.WithContext(ctx).Model(&entity.UserProfile{}).Where("user_id = ?", userID).Updates(updates).Error; err != nil {
+		return fmt.Errorf("更新位置資訊失敗: %w", err)
+	}
+	return nil
+}
 
-	// 組合完整查詢
-	if len(conditions) > 0 {
-		baseQuery += " AND " + strings.Join(conditions, " AND ")
+// UpdateMatchingPreferences 更新配對偏好設定
+func (r *MySQLUserProfileRepository) UpdateMatchingPreferences(ctx context.Context, userID uint, maxDistance, ageMin, ageMax int) error {
+	updates := map[string]interface{}{
+		"max_distance":  maxDistance,
+		"age_range_min": ageMin,
+		"age_range_max": ageMax,
 	}
 
-	baseQuery += " ORDER BY last_active_at DESC LIMIT ? OFFSET ?"
-	args = append(args, limit, offset)
-
-	rows, err := r.db.Query(baseQuery, args...)
-	if err != nil {
-		return nil, err
+	if err := r.db.WithContext(ctx).Model(&entity.UserProfile{}).Where("user_id = ?", userID).Updates(updates).Error; err != nil {
+		return fmt.Errorf("更新配對偏好設定失敗: %w", err)
 	}
-	defer rows.Close()
+	return nil
+}
 
-	var users []*entity.UserInformation
-	for rows.Next() {
-		dbModel := &UserDBModel{}
+// MySQLPhotoRepository MySQL 照片儲存庫實作
+type MySQLPhotoRepository struct {
+	db *gorm.DB
+}
 
-		err := rows.Scan(
-			&dbModel.ID, &dbModel.Username, &dbModel.Email, &dbModel.Age, &dbModel.Gender,
-			&dbModel.IsVerified, &dbModel.Status,
-			&dbModel.LastActiveAt, &dbModel.CreatedAt, &dbModel.UpdatedAt,
-		)
-		if err != nil {
-			return nil, err
+// NewPhotoRepository 創建新的 MySQL 照片儲存庫
+func NewPhotoRepository(db *gorm.DB) repository.PhotoRepository {
+	return &MySQLPhotoRepository{db: db}
+}
+
+// Create 添加用戶照片
+func (r *MySQLPhotoRepository) Create(ctx context.Context, photo *entity.Photo) error {
+	if err := r.db.WithContext(ctx).Create(photo).Error; err != nil {
+		return fmt.Errorf("添加照片失敗: %w", err)
+	}
+	return nil
+}
+
+// GetByUserID 獲取用戶所有照片
+func (r *MySQLPhotoRepository) GetByUserID(ctx context.Context, userID uint) ([]*entity.Photo, error) {
+	var photos []*entity.Photo
+	if err := r.db.WithContext(ctx).Where("user_id = ?", userID).Order("display_order").Find(&photos).Error; err != nil {
+		return nil, fmt.Errorf("獲取用戶照片失敗: %w", err)
+	}
+	return photos, nil
+}
+
+// GetByID 根據 ID 獲取照片
+func (r *MySQLPhotoRepository) GetByID(ctx context.Context, id uint) (*entity.Photo, error) {
+	var photo entity.Photo
+	if err := r.db.WithContext(ctx).First(&photo, id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("照片不存在: %w", err)
+		}
+		return nil, fmt.Errorf("查詢照片失敗: %w", err)
+	}
+	return &photo, nil
+}
+
+// Update 更新照片資訊
+func (r *MySQLPhotoRepository) Update(ctx context.Context, photo *entity.Photo) error {
+	if err := r.db.WithContext(ctx).Save(photo).Error; err != nil {
+		return fmt.Errorf("更新照片失敗: %w", err)
+	}
+	return nil
+}
+
+// Delete 刪除照片
+func (r *MySQLPhotoRepository) Delete(ctx context.Context, id uint) error {
+	if err := r.db.WithContext(ctx).Delete(&entity.Photo{}, id).Error; err != nil {
+		return fmt.Errorf("刪除照片失敗: %w", err)
+	}
+	return nil
+}
+
+// SetPrimary 設定主要照片
+func (r *MySQLPhotoRepository) SetPrimary(ctx context.Context, userID, photoID uint) error {
+	// 開始事務
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 先將該用戶的所有照片設為非主要
+		if err := tx.Model(&entity.Photo{}).Where("user_id = ?", userID).Update("is_primary", false).Error; err != nil {
+			return fmt.Errorf("重置主要照片失敗: %w", err)
 		}
 
-		// 使用 EntityMapper 轉換為領域實體
-		user, err := r.entityMapper.ToEntity(dbModel)
-		if err != nil {
-			return nil, err
+		// 設定指定照片為主要
+		if err := tx.Model(&entity.Photo{}).Where("id = ? AND user_id = ?", photoID, userID).Update("is_primary", true).Error; err != nil {
+			return fmt.Errorf("設定主要照片失敗: %w", err)
 		}
 
-		users = append(users, user)
+		return nil
+	})
+}
+
+// UpdateOrder 更新照片排序
+func (r *MySQLPhotoRepository) UpdateOrder(ctx context.Context, userID uint, photoOrders []struct {
+	PhotoID uint
+	Order   int
+}) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, order := range photoOrders {
+			if err := tx.Model(&entity.Photo{}).
+				Where("id = ? AND user_id = ?", order.PhotoID, userID).
+				Update("display_order", order.Order).Error; err != nil {
+				return fmt.Errorf("更新照片排序失敗 (照片ID: %d): %w", order.PhotoID, err)
+			}
+		}
+		return nil
+	})
+}
+
+// MySQLInterestRepository MySQL 興趣標籤儲存庫實作
+type MySQLInterestRepository struct {
+	db *gorm.DB
+}
+
+// NewInterestRepository 創建新的 MySQL 興趣標籤儲存庫
+func NewInterestRepository(db *gorm.DB) repository.InterestRepository {
+	return &MySQLInterestRepository{db: db}
+}
+
+// GetAll 獲取所有可用興趣標籤
+func (r *MySQLInterestRepository) GetAll(ctx context.Context) ([]*entity.Interest, error) {
+	var interests []*entity.Interest
+	if err := r.db.WithContext(ctx).Find(&interests).Error; err != nil {
+		return nil, fmt.Errorf("獲取興趣標籤失敗: %w", err)
+	}
+	return interests, nil
+}
+
+// GetByUserID 獲取用戶的興趣標籤
+func (r *MySQLInterestRepository) GetByUserID(ctx context.Context, userID uint) ([]*entity.Interest, error) {
+	var interests []*entity.Interest
+	// 假設有一個 user_interests 關聯表
+	if err := r.db.WithContext(ctx).
+		Table("interests").
+		Select("interests.*").
+		Joins("INNER JOIN user_interests ON interests.id = user_interests.interest_id").
+		Where("user_interests.user_id = ?", userID).
+		Find(&interests).Error; err != nil {
+		return nil, fmt.Errorf("獲取用戶興趣標籤失敗: %w", err)
+	}
+	return interests, nil
+}
+
+// SetUserInterests 設定用戶興趣標籤
+func (r *MySQLInterestRepository) SetUserInterests(ctx context.Context, userID uint, interestIDs []uint) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 先刪除現有關聯
+		if err := tx.Exec("DELETE FROM user_interests WHERE user_id = ?", userID).Error; err != nil {
+			return fmt.Errorf("刪除現有興趣關聯失敗: %w", err)
+		}
+
+		// 新增新的關聯
+		for _, interestID := range interestIDs {
+			if err := tx.Exec("INSERT INTO user_interests (user_id, interest_id) VALUES (?, ?)", userID, interestID).Error; err != nil {
+				return fmt.Errorf("新增興趣關聯失敗 (興趣ID: %d): %w", interestID, err)
+			}
+		}
+
+		return nil
+	})
+}
+
+// Create 創建新興趣標籤
+func (r *MySQLInterestRepository) Create(ctx context.Context, interest *entity.Interest) error {
+	if err := r.db.WithContext(ctx).Create(interest).Error; err != nil {
+		return fmt.Errorf("創建興趣標籤失敗: %w", err)
+	}
+	return nil
+}
+
+// Update 更新興趣標籤
+func (r *MySQLInterestRepository) Update(ctx context.Context, interest *entity.Interest) error {
+	if err := r.db.WithContext(ctx).Save(interest).Error; err != nil {
+		return fmt.Errorf("更新興趣標籤失敗: %w", err)
+	}
+	return nil
+}
+
+// Delete 刪除興趣標籤
+func (r *MySQLInterestRepository) Delete(ctx context.Context, id uint) error {
+	if err := r.db.WithContext(ctx).Delete(&entity.Interest{}, id).Error; err != nil {
+		return fmt.Errorf("刪除興趣標籤失敗: %w", err)
+	}
+	return nil
+}
+
+// MySQLAgeVerificationRepository MySQL 年齡驗證儲存庫實作
+type MySQLAgeVerificationRepository struct {
+	db *gorm.DB
+}
+
+// NewAgeVerificationRepository 創建新的 MySQL 年齡驗證儲存庫
+func NewAgeVerificationRepository(db *gorm.DB) repository.AgeVerificationRepository {
+	return &MySQLAgeVerificationRepository{db: db}
+}
+
+// Create 創建年齡驗證記錄
+func (r *MySQLAgeVerificationRepository) Create(ctx context.Context, verification *entity.AgeVerification) error {
+	if err := r.db.WithContext(ctx).Create(verification).Error; err != nil {
+		return fmt.Errorf("創建年齡驗證記錄失敗: %w", err)
+	}
+	return nil
+}
+
+// GetByUserID 根據用戶 ID 獲取驗證記錄
+func (r *MySQLAgeVerificationRepository) GetByUserID(ctx context.Context, userID uint) (*entity.AgeVerification, error) {
+	var verification entity.AgeVerification
+	if err := r.db.WithContext(ctx).Where("user_id = ?", userID).First(&verification).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("年齡驗證記錄不存在: %w", err)
+		}
+		return nil, fmt.Errorf("查詢年齡驗證記錄失敗: %w", err)
+	}
+	return &verification, nil
+}
+
+// Update 更新驗證記錄
+func (r *MySQLAgeVerificationRepository) Update(ctx context.Context, verification *entity.AgeVerification) error {
+	if err := r.db.WithContext(ctx).Save(verification).Error; err != nil {
+		return fmt.Errorf("更新年齡驗證記錄失敗: %w", err)
+	}
+	return nil
+}
+
+// GetPendingVerifications 獲取待審核的驗證記錄
+func (r *MySQLAgeVerificationRepository) GetPendingVerifications(ctx context.Context, limit int) ([]*entity.AgeVerification, error) {
+	var verifications []*entity.AgeVerification
+	query := r.db.WithContext(ctx).Where("status = ?", entity.VerificationStatusPending).Order("created_at ASC")
+
+	if limit > 0 {
+		query = query.Limit(limit)
 	}
 
-	return users, nil
+	if err := query.Find(&verifications).Error; err != nil {
+		return nil, fmt.Errorf("獲取待審核驗證記錄失敗: %w", err)
+	}
+	return verifications, nil
+}
+
+// SetVerificationStatus 設定驗證狀態
+func (r *MySQLAgeVerificationRepository) SetVerificationStatus(ctx context.Context, userID uint, status entity.VerificationStatus, reviewerID *uint, notes string) error {
+	updates := map[string]interface{}{
+		"status":       status,
+		"review_notes": notes,
+	}
+
+	if reviewerID != nil {
+		updates["reviewer_id"] = *reviewerID
+	}
+
+	if err := r.db.WithContext(ctx).Model(&entity.AgeVerification{}).Where("user_id = ?", userID).Updates(updates).Error; err != nil {
+		return fmt.Errorf("設定驗證狀態失敗: %w", err)
+	}
+	return nil
 }

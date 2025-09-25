@@ -3,14 +3,50 @@ database:
   port: 3306
   user: test_user
   password: test_password
-  dbname: test_chat_app
+  dbname: test_dating_app
   charset: utf8mb4
   parseTime: true
   loc: Local
 
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 1 # 使用不同的 Redis 資料庫
+
 server:
   port: 8081
   mode: test
+
+# 年齡驗證配置 (測試環境)
+age_verification:
+  minimum_age: 18
+  verification_methods:
+    - "birth_date"
+  verification_expiry_days: 1 # 測試用短期過期
+  strict_mode: false
+
+# JWT 配置 (測試環境)
+jwt:
+  secret: "test-secret-key-for-testing-only"
+  expiry_hours: 1 # 測試用短期過期
+  refresh_expiry_days: 1
+  issuer: "dating-app-test"
+
+# 檔案上傳配置 (測試環境)
+upload:
+  max_file_size_mb: 1
+  allowed_types:
+    - "image/jpeg"
+    - "image/png"
+  photo_upload_path: "test/uploads/photos"
+
+# WebSocket 配置 (測試環境)
+websocket:
+  max_connections: 10
+  read_buffer_size: 512
+  write_buffer_size: 512
+  ping_period_seconds: 10
 
 logging:
   level: debug

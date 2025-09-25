@@ -3,115 +3,310 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>用戶註冊 - 即時聊天室</title>
-    <link rel="stylesheet" href="/static/css/common.css">
-    <link rel="stylesheet" href="/static/css/register.css">
-</head>
+    <title>註冊 - 18+ 交友聊天</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/auth.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .register-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group input.error, .form-group select.error {
+            border-color: #e74c3c;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .age-verification {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #ffd700;
+        }
+
+        .age-verification h3 {
+            margin-top: 0;
+            color: #d4910a;
+            display: flex;
+            align-items: center;
+        }
+
+        .age-verification h3::before {
+            content: "⚠️";
+            margin-right: 10px;
+        }
+
+        .age-verification p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .submit-button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e5e9;
+        }
+
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            font-weight: normal;
+        }
+    </style>
 </head>
 <body>
-    <a href="/" class="back-link">← 返回首頁</a>
-    
-    <div class="main-container">
-        <div class="register-container glass-card">
-            <h1 style="text-align: center; color: white; margin-bottom: 2rem;">用戶註冊</h1>
-            
-            <form class="register-form" id="registerForm">
-                <div class="form-group">
-                    <label for="username">用戶名</label>
-                    <input type="text" id="username" name="username" placeholder="請輸入用戶名" required>
+    <div class="register-container">
+        <div class="logo">
+            <h1>💕 愛情配對</h1>
+            <p>找到你的真命天子/天女</p>
+        </div>
+
+        <div id="success-message" class="success-message">
+            註冊成功！請檢查您的郵件以完成驗證。
+        </div>
+
+        <form id="register-form">
+            <div class="form-group">
+                <label for="email">電子郵件</label>
+                <input type="email" id="email" name="email" required>
+                <div class="error-message" id="email-error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">密碼</label>
+                <input type="password" id="password" name="password" required minlength="8">
+                <div class="error-message" id="password-error"></div>
+                <small style="color: #666;">至少8個字符</small>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm-password">確認密碼</label>
+                <input type="password" id="confirm-password" name="confirm_password" required>
+                <div class="error-message" id="confirm-password-error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="birth-date">出生日期</label>
+                <input type="date" id="birth-date" name="birth_date" required>
+                <div class="error-message" id="birth-date-error"></div>
+            </div>
+
+            <div class="age-verification">
+                <h3>年齡驗證</h3>
+                <p>本平台僅限<strong>18歲以上</strong>成年人使用。註冊即表示您確認：</p>
+                <ul>
+                    <li>您已年滿18歲</li>
+                    <li>您同意遵守平台使用條款</li>
+                    <li>您理解這是一個成人交友平台</li>
+                </ul>
+                <div id="age-warning" class="error-message" style="display: none;">
+                    您必須年滿18歲才能註冊此平台
                 </div>
-                
-                <div class="form-group">
-                    <label for="email">電子郵件</label>
-                    <input type="email" id="email" name="email" placeholder="請輸入電子郵件" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="password">密碼</label>
-                    <input type="password" id="password" name="password" placeholder="請輸入密碼 (至少6個字元)" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="confirmPassword">確認密碼</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="請再次輸入密碼" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">註冊</button>
-                
-                <div class="error-message" id="errorMessage"></div>
-                <div class="success-message" id="successMessage"></div>
-            </form>
-            
-            <p style="text-align: center; color: white; margin-top: 1rem;">
-                已有帳號？<a href="/login" style="color: #ff6b6b;">點此登入</a>
-            </p>
+            </div>
+
+            <div class="form-group">
+                <label for="display-name">顯示名稱</label>
+                <input type="text" id="display-name" name="display_name" required maxlength="50">
+                <div class="error-message" id="display-name-error"></div>
+                <small style="color: #666;">2-50個字符，這將是其他用戶看到的名稱</small>
+            </div>
+
+            <div class="form-group">
+                <label for="gender">性別</label>
+                <select id="gender" name="gender" required>
+                    <option value="">請選擇性別</option>
+                    <option value="male">男性</option>
+                    <option value="female">女性</option>
+                    <option value="other">其他</option>
+                </select>
+                <div class="error-message" id="gender-error"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="biography">自我介紹（選填）</label>
+                <textarea id="biography" name="biography" rows="4" maxlength="500" 
+                         placeholder="介紹一下自己，讓其他人更了解您..."></textarea>
+                <div class="error-message" id="biography-error"></div>
+                <small style="color: #666;">最多500個字符</small>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="terms" required>
+                <label for="terms">
+                    我已閱讀並同意 <a href="#" target="_blank">使用條款</a> 和 
+                    <a href="#" target="_blank">隱私政策</a>
+                </label>
+                <div class="error-message" id="terms-error"></div>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="age-confirm" required>
+                <label for="age-confirm">
+                    我確認已年滿18歲，並願意承擔使用本平台的責任
+                </label>
+                <div class="error-message" id="age-confirm-error"></div>
+            </div>
+
+            <button type="submit" class="submit-button" id="register-btn">
+                創建帳戶
+            </button>
+        </form>
+
+        <div class="login-link">
+            已有帳戶？ <a href="/static/html/auth/login.html">立即登入</a>
         </div>
     </div>
 
+    <script src="/static/js/register.js"></script>
     <script>
-        document.getElementById('registerForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        // 基本的年齡驗證
+        document.getElementById('birth-date').addEventListener('change', function() {
+            const birthDate = new Date(this.value);
+            const today = new Date();
+            const age = today.getFullYear() - birthDate.getFullYear() - 
+                       (today.getMonth() < birthDate.getMonth() || 
+                        (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate()));
             
-            const username = document.getElementById('username').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
+            const ageWarning = document.getElementById('age-warning');
+            const ageConfirm = document.getElementById('age-confirm');
+            const registerBtn = document.getElementById('register-btn');
             
-            const errorMessage = document.getElementById('errorMessage');
-            const successMessage = document.getElementById('successMessage');
-            
-            // 清除之前的訊息
-            errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
-            
-            // 基本驗證
-            if (password !== confirmPassword) {
-                errorMessage.textContent = '密碼與確認密碼不一致';
-                errorMessage.style.display = 'block';
-                return;
+            if (age < 18) {
+                ageWarning.style.display = 'block';
+                ageConfirm.disabled = true;
+                registerBtn.disabled = true;
+                this.classList.add('error');
+            } else {
+                ageWarning.style.display = 'none';
+                ageConfirm.disabled = false;
+                registerBtn.disabled = false;
+                this.classList.remove('error');
             }
-            
-            if (password.length < 6) {
-                errorMessage.textContent = '密碼長度至少需要6個字元';
-                errorMessage.style.display = 'block';
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/user/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        username: username,
-                        email: email,
-                        password: password
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    successMessage.textContent = '註冊成功！歡迎加入聊天室';
-                    successMessage.style.display = 'block';
-                    
-                    // 清空表單
-                    document.getElementById('registerForm').reset();
-                    
-                    // 3秒後跳轉到聊天室
-                    setTimeout(() => {
-                        window.location.href = '/chat';
-                    }, 3000);
-                } else {
-                    errorMessage.textContent = data.error || '註冊失敗，請稍後再試';
-                    errorMessage.style.display = 'block';
-                }
-            } catch (error) {
-                console.error('註冊錯誤:', error);
-                errorMessage.textContent = '網路錯誤，請檢查連線';
-                errorMessage.style.display = 'block';
-            }
+        });
+
+        // 即時字數統計
+        document.getElementById('biography').addEventListener('input', function() {
+            const remaining = 500 - this.value.length;
+            const small = this.nextElementSibling.nextElementSibling;
+            small.textContent = `剩餘${remaining}個字符`;
+            small.style.color = remaining < 50 ? '#e74c3c' : '#666';
+        });
+
+        document.getElementById('display-name').addEventListener('input', function() {
+            const remaining = 50 - this.value.length;
+            const small = this.nextElementSibling.nextElementSibling;
+            small.textContent = `${this.value.length}/50個字符`;
         });
     </script>
 </body>

@@ -13,6 +13,7 @@ type Config struct {
 	Database DatabaseConfig `yaml:"database"`
 	Server   ServerConfig   `yaml:"server"`
 	Logging  LoggingConfig  `yaml:"logging"`
+	Redis    RedisConfig    `yaml:"redis"`
 }
 
 // DatabaseConfig 代表資料庫配置
@@ -37,6 +38,14 @@ type ServerConfig struct {
 type LoggingConfig struct {
 	Level  string `yaml:"level"`
 	Format string `yaml:"format"`
+}
+
+// RedisConfig 代表 Redis 配置
+type RedisConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Password string `yaml:"password"`
+	DB       int    `yaml:"db"`
 }
 
 // GetDSN 建構資料庫連線字串

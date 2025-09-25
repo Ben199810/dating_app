@@ -1,157 +1,94 @@
 package entity
 
 import (
+	"errors"
 	"time"
 )
 
-// Gender 性別枚舉
-type Gender string
+// User 用戶基本資料實體
+type User struct {
+	ID           uint      `gorm:"primaryKey" json:"id"`
+	Email        string    `gorm:"uniqueIndex;not null" json:"email"`
+	PasswordHash string    `gorm:"not null" json:"-"`
+	BirthDate    time.Time `gorm:"not null" json:"birth_date"`
+	IsVerified   bool      `gorm:"default:false" json:"is_verified"`
+	IsActive     bool      `gorm:"default:true" json:"is_active"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 
-const (
-	GenderMale   Gender = "male"
-	GenderFemale Gender = "female"
-	GenderOther  Gender = "other"
-)
-
-// UserStatus 用戶狀態枚舉
-type UserStatus string
-
-const (
-	UserStatusActive   UserStatus = "active"
-	UserStatusInactive UserStatus = "inactive"
-	UserStatusBanned   UserStatus = "banned"
-)
-
-// StringArray 純粹的領域類型，用於處理字串陣列
-// 不包含任何基礎設施相關的邏輯
-type StringArray []string
-
-// IsEmpty 檢查陣列是否為空
-func (sa StringArray) IsEmpty() bool {
-	return len(sa) == 0
+	// 關聯 - 將在其他實體建立後添加
+	// Profile        *UserProfile     `gorm:"foreignKey:UserID" json:"profile,omitempty"`
+	// Photos         []Photo          `gorm:"foreignKey:UserID" json:"photos,omitempty"`
+	// AgeVerification *AgeVerification `gorm:"foreignKey:UserID" json:"age_verification,omitempty"`
 }
 
-// Contains 檢查是否包含特定元素
-func (sa StringArray) Contains(item string) bool {
-	for _, s := range sa {
-		if s == item {
-			return true
-		}
+// IsAdult 檢查用戶是否年滿 18 歲
+func (u *User) IsAdult() bool {
+	now := time.Now()
+	age := now.Year() - u.BirthDate.Year()
+
+	// 調整年齡計算（如果還沒到生日）
+	if now.YearDay() < u.BirthDate.YearDay() {
+		age--
 	}
-	return false
+
+	return age >= 18
 }
 
-// Add 添加元素（返回新的陣列，保持不可變性）
-func (sa StringArray) Add(item string) StringArray {
-	if sa.Contains(item) {
-		return sa
+// GetAge 計算用戶當前年齡
+func (u *User) GetAge() int {
+	now := time.Now()
+	age := now.Year() - u.BirthDate.Year()
+
+	// 調整年齡計算（如果還沒到生日）
+	if now.YearDay() < u.BirthDate.YearDay() {
+		age--
 	}
-	newArray := make([]string, len(sa)+1)
-	copy(newArray, sa)
-	newArray[len(sa)] = item
-	return StringArray(newArray)
+
+	return age
 }
 
-// Remove 移除元素（返回新的陣列，保持不可變性）
-func (sa StringArray) Remove(item string) StringArray {
-	var result []string
-	for _, s := range sa {
-		if s != item {
-			result = append(result, s)
-		}
+// IsEligible 檢查用戶是否符合使用應用程式的條件
+func (u *User) IsEligible() bool {
+	return u.IsActive && u.IsVerified && u.IsAdult()
+}
+
+// Validate 驗證用戶資料的完整性
+func (u *User) Validate() error {
+	if u.Email == "" {
+		return errors.New("email 是必填欄位")
 	}
-	return StringArray(result)
+
+	if u.PasswordHash == "" {
+		return errors.New("password 是必填欄位")
+	}
+
+	if u.BirthDate.IsZero() {
+		return errors.New("birth_date 是必填欄位")
+	}
+
+	// 檢查年齡限制
+	if !u.IsAdult() {
+		return errors.New("用戶必須年滿 18 歲")
+	}
+
+	return nil
 }
 
-// UserInformation 完整的用戶資訊結構體
-type UserInformation struct {
-	ID           int        `json:"id"`
-	Username     string     `json:"username"`
-	Email        string     `json:"email"`
-	Password     string     `json:"-"` // 不序列化密碼
-	Age          *int       `json:"age,omitempty"`
-	Gender       *Gender    `json:"gender,omitempty"`
-	IsVerified   bool       `json:"is_verified"`
-	Status       UserStatus `json:"status"`
-	LastActiveAt *time.Time `json:"last_active_at,omitempty"`
-	CreatedAt    time.Time  `json:"created_at"`
-	UpdatedAt    time.Time  `json:"updated_at"`
+// Deactivate 停用用戶帳戶
+func (u *User) Deactivate() {
+	u.IsActive = false
+	u.UpdatedAt = time.Now()
 }
 
-// UserProfile 詳細的用戶個人檔案資訊
-type UserProfile struct {
-	ID              int         `json:"id"`
-	UserID          int         `json:"user_id"`
-	Bio             *string     `json:"bio,omitempty"`               // 自我介紹
-	Interests       StringArray `json:"interests,omitempty"`         // 興趣列表
-	LocationLat     *float64    `json:"location_lat,omitempty"`      // 地理位置-緯度
-	LocationLng     *float64    `json:"location_lng,omitempty"`      // 地理位置-經度
-	City            *string     `json:"city,omitempty"`              // 城市
-	Country         *string     `json:"country,omitempty"`           // 國家
-	Height          *int        `json:"height,omitempty"`            // 身高 (cm)
-	Weight          *int        `json:"weight,omitempty"`            // 體重 (kg)
-	Education       *string     `json:"education,omitempty"`         // 教育背景
-	Occupation      *string     `json:"occupation,omitempty"`        // 職業
-	Company         *string     `json:"company,omitempty"`           // 公司
-	Relationship    *string     `json:"relationship,omitempty"`      // 感情狀態
-	LookingFor      StringArray `json:"looking_for,omitempty"`       // 尋找什麼關係
-	Languages       StringArray `json:"languages,omitempty"`         // 語言能力
-	Hobbies         StringArray `json:"hobbies,omitempty"`           // 興趣愛好
-	Lifestyle       StringArray `json:"lifestyle,omitempty"`         // 生活方式
-	PetPreference   *string     `json:"pet_preference,omitempty"`    // 寵物偏好
-	DrinkingHabit   *string     `json:"drinking_habit,omitempty"`    // 飲酒習慣
-	SmokingHabit    *string     `json:"smoking_habit,omitempty"`     // 吸菸習慣
-	ExerciseHabit   *string     `json:"exercise_habit,omitempty"`    // 運動習慣
-	SocialMediaLink *string     `json:"social_media_link,omitempty"` // 社群媒體連結
-	PersonalityType *string     `json:"personality_type,omitempty"`  // 人格類型
-	Zodiac          *string     `json:"zodiac,omitempty"`            // 星座
-	Religion        *string     `json:"religion,omitempty"`          // 宗教信仰
-	CreatedAt       time.Time   `json:"created_at"`
-	UpdatedAt       time.Time   `json:"updated_at"`
+// Activate 啟用用戶帳戶
+func (u *User) Activate() {
+	u.IsActive = true
+	u.UpdatedAt = time.Now()
 }
 
-// PhotoStatus 照片狀態枚舉
-type PhotoStatus string
-
-const (
-	PhotoStatusPending  PhotoStatus = "pending"  // 等待審核
-	PhotoStatusApproved PhotoStatus = "approved" // 已審核通過
-	PhotoStatusRejected PhotoStatus = "rejected" // 審核不通過
-)
-
-// UserPhoto 用戶照片管理
-type UserPhoto struct {
-	ID           int         `json:"id"`
-	UserID       int         `json:"user_id"`
-	PhotoURL     string      `json:"photo_url"`
-	ThumbnailURL *string     `json:"thumbnail_url,omitempty"`
-	IsPrimary    bool        `json:"is_primary"`
-	Order        int         `json:"order"` // 照片排序
-	Status       PhotoStatus `json:"status"`
-	Caption      *string     `json:"caption,omitempty"` // 照片說明
-	IsVerified   bool        `json:"is_verified"`       // 是否為認證照片
-	UploadedAt   time.Time   `json:"uploaded_at"`
-	CreatedAt    time.Time   `json:"created_at"`
-	UpdatedAt    time.Time   `json:"updated_at"`
-}
-
-// UserPreference 用戶配對偏好設定
-type UserPreference struct {
-	ID              int         `json:"id"`
-	UserID          int         `json:"user_id"`
-	PreferredGender *Gender     `json:"preferred_gender,omitempty"`
-	AgeMin          *int        `json:"age_min,omitempty"`
-	AgeMax          *int        `json:"age_max,omitempty"`
-	DistanceMax     *int        `json:"distance_max,omitempty"` // 最大距離 (km)
-	HeightMin       *int        `json:"height_min,omitempty"`
-	HeightMax       *int        `json:"height_max,omitempty"`
-	Education       StringArray `json:"education,omitempty"`
-	Interests       StringArray `json:"interests,omitempty"`
-	Lifestyle       StringArray `json:"lifestyle,omitempty"`
-	ShowMe          bool        `json:"show_me"`          // 是否顯示我的資料給別人
-	ShowDistance    bool        `json:"show_distance"`    // 是否顯示距離
-	ShowAge         bool        `json:"show_age"`         // 是否顯示年齡
-	ShowLastActive  bool        `json:"show_last_active"` // 是否顯示最後上線時間
-	CreatedAt       time.Time   `json:"created_at"`
-	UpdatedAt       time.Time   `json:"updated_at"`
+// MarkAsVerified 標記用戶已通過年齡驗證
+func (u *User) MarkAsVerified() {
+	u.IsVerified = true
+	u.UpdatedAt = time.Now()
 }

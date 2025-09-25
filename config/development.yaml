@@ -1,16 +1,54 @@
 database:
   host: localhost
   port: 3306
-  user: chat_user
-  password: chat_password
-  dbname: chat_app
+  user: dating_user
+  password: dating_password
+  dbname: dating_app
   charset: utf8mb4
   parseTime: true
   loc: Local
 
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0
+
 server:
   port: 8080
   mode: debug
+
+# 年齡驗證配置
+age_verification:
+  minimum_age: 18
+  verification_methods:
+    - "birth_date"
+    - "id_document"
+  verification_expiry_days: 365
+  strict_mode: true
+
+# JWT 配置
+jwt:
+  secret: "your-256-bit-secret-key-for-development-only"
+  expiry_hours: 24
+  refresh_expiry_days: 7
+  issuer: "dating-app"
+
+# 檔案上傳配置
+upload:
+  max_file_size_mb: 10
+  allowed_types:
+    - "image/jpeg"
+    - "image/png"
+    - "image/webp"
+  photo_upload_path: "static/uploads/photos"
+
+# WebSocket 配置
+websocket:
+  max_connections: 1000
+  read_buffer_size: 1024
+  write_buffer_size: 1024
+  ping_period_seconds: 54
 
 logging:
   level: info

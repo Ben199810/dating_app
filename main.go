@@ -1,16 +1,15 @@
 package main
 
 import (
-	"database/sql"
-	"fmt"
 	"log"
+	"os"
+	"time"
 
 	"golang_dev_docker/config"
-	"golang_dev_docker/domain/service"
 	"golang_dev_docker/infrastructure/mysql"
-	"golang_dev_docker/server/handler"
+	"golang_dev_docker/infrastructure/redis"
+	"golang_dev_docker/server"
 
-	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -18,53 +17,92 @@ func main() {
 	// 載入配置
 	cfg, err := config.LoadConfig("")
 	if err != nil {
-		log.Fatal("無法載入配置:", err)
+		log.Fatalf("載入配置失敗: %v", err)
 	}
 
-	// 初始化資料庫連線
-	db := initDB(cfg.Database)
-	defer db.Close()
+	// 調試：輸出資料庫配置
+	log.Printf("資料庫配置: Host=%s, Port=%d, User=%s, DBName=%s",
+		cfg.Database.Host, cfg.Database.Port, cfg.Database.User, cfg.Database.DBName)
+	log.Printf("DSN: %s", cfg.Database.GetDSN())
 
-	// 初始化 Repository 和 Service
-	userRepo, authRepo := mysql.NewUserRepository(db)
-	userService := service.NewUserService(userRepo, authRepo)
-	authService := service.NewAuthService(authRepo)
-	
-	// 初始化 UserProfileService (暫時使用 nil 作為其他 repository)
-	userProfileService := service.NewUserProfileService(userRepo, nil, nil, nil)
-
-	// 設定 Handler 的依賴
-	handler.SetUserService(userService)
-	handler.SetAuthService(authService)
-	handler.SetUserProfileService(userProfileService)
-
-	// 啟動 WebSocket 處理
-	go handler.HandleMessages()
-
-	// 設定 Gin 模式
-	gin.SetMode(cfg.Server.Mode)
-
-	// 設定路由
-	r := gin.Default()
-	RegisterRoutes(r)
-
-	// 啟動伺服器
-	r.Run(fmt.Sprintf(":%d", cfg.Server.Port))
-}
-
-func initDB(dbConfig config.DatabaseConfig) *sql.DB {
-	// 使用配置建構 DSN
-	dsn := dbConfig.GetDSN()
-
-	db, err := sql.Open("mysql", dsn)
-	if err != nil {
-		log.Fatal("無法連接到資料庫:", err)
+	// 建立伺服器實例
+	serverConfig := &server.ServerConfig{
+		Port:                    cfg.Server.Port,
+		Mode:                    cfg.Server.Mode,
+		ReadTimeout:             10 * time.Second,
+		WriteTimeout:            10 * time.Second,
+		IdleTimeout:             60 * time.Second,
+		MaxHeaderBytes:          1 << 20, // 1MB
+		GracefulShutdownTimeout: 30 * time.Second,
+		StaticPath:              "./static",
+		UploadPath:              "./uploads",
+		JWTSecret:               "dating-app-secret-key", // TODO: 從環境變數或配置讀取
 	}
 
-	if err := db.Ping(); err != nil {
-		log.Fatal("無法ping資料庫:", err)
+	srv := server.NewServer(serverConfig)
+
+	// 初始化資料庫
+	dbConfig := &mysql.DatabaseConfig{
+		Host:            cfg.Database.Host,
+		Port:            cfg.Database.Port,
+		Database:        cfg.Database.DBName,
+		Username:        cfg.Database.User,
+		Password:        cfg.Database.Password,
+		Charset:         "utf8mb4",
+		Collation:       "utf8mb4_unicode_ci",
+		Timezone:        "UTC",
+		MaxOpenConns:    25,
+		MaxIdleConns:    10,
+		ConnMaxLifetime: time.Hour,
+		ConnMaxIdleTime: 10 * time.Minute,
+		LogLevel:        "info",
+		SlowThreshold:   200 * time.Millisecond,
 	}
 
-	log.Printf("資料庫連線成功 - Host: %s, DB: %s", dbConfig.Host, dbConfig.DBName)
-	return db
+	if err := srv.InitializeDatabase(dbConfig); err != nil {
+		log.Fatalf("初始化資料庫失敗: %v", err)
+	}
+
+	// 初始化 Redis 配置
+	redisConfig := &redis.RedisConfig{
+		Host:         cfg.Redis.Host,
+		Port:         cfg.Redis.Port,
+		Password:     cfg.Redis.Password,
+		DB:           cfg.Redis.DB,
+		PoolSize:     10,
+		MinIdleConns: 5,
+		MaxRetries:   3,
+		DialTimeout:  5 * time.Second,
+		ReadTimeout:  3 * time.Second,
+		WriteTimeout: 3 * time.Second,
+		IdleTimeout:  5 * time.Minute,
+	}
+
+	if err := srv.InitializeRedis(redisConfig); err != nil {
+		log.Printf("Redis 初始化失敗，繼續無快取模式: %v", err)
+	}
+
+	// 初始化 WebSocket（需要在業務服務初始化之前）
+	srv.InitializeWebSocket()
+
+	// 初始化業務服務
+	if err := srv.InitializeServices(); err != nil {
+		log.Fatalf("初始化業務服務失敗: %v", err)
+	}
+
+	// 初始化中間件
+	env := os.Getenv("APP_ENV")
+	if env == "" {
+		env = "development"
+	}
+	srv.InitializeMiddleware(env)
+
+	// 設置路由
+	srv.SetupRoutes()
+
+	// 啟動伺服器（支援優雅關閉）
+	log.Printf("啟動 %s 環境的伺服器...", env)
+	if err := srv.StartWithGracefulShutdown(); err != nil {
+		log.Fatalf("伺服器啟動失敗: %v", err)
+	}
 }
