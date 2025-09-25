@@ -21,7 +21,7 @@ func main() {
 	}
 
 	// 調試：輸出資料庫配置
-	log.Printf("資料庫配置: Host=%s, Port=%d, User=%s, DBName=%s", 
+	log.Printf("資料庫配置: Host=%s, Port=%d, User=%s, DBName=%s",
 		cfg.Database.Host, cfg.Database.Port, cfg.Database.User, cfg.Database.DBName)
 	log.Printf("DSN: %s", cfg.Database.GetDSN())
 
@@ -82,8 +82,13 @@ func main() {
 		log.Printf("Redis 初始化失敗，繼續無快取模式: %v", err)
 	}
 
-	// 初始化 WebSocket
+	// 初始化 WebSocket（需要在業務服務初始化之前）
 	srv.InitializeWebSocket()
+
+	// 初始化業務服務
+	if err := srv.InitializeServices(); err != nil {
+		log.Fatalf("初始化業務服務失敗: %v", err)
+	}
 
 	// 初始化中間件
 	env := os.Getenv("APP_ENV")

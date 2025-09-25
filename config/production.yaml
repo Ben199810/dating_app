@@ -1,55 +1,201 @@
+# 生產環境配置 - 企業級高效能與安全性優化
+# Production Configuration for Enterprise Dating App
+
+# 資料庫設定 - MySQL 生產優化
 database:
   host: mysql # Docker Compose 中的 MySQL 服務名稱
   port: 3306
   user: dating_user
-  password: dating_password
+  password: "${DB_PASSWORD}" # 從環境變數讀取安全密碼
   dbname: dating_app
   charset: utf8mb4
   parseTime: true
   loc: Local
+  # 連線池優化設定
+  max_idle_conns: 10
+  max_open_conns: 100
+  conn_max_lifetime_minutes: 60
+  # 效能優化
+  timeout_seconds: 30
+  read_timeout_seconds: 10
+  write_timeout_seconds: 10
 
+# Redis 配置 - 快取與工作階段管理
 redis:
   host: redis # Docker Compose 中的 Redis 服務名稱
   port: 6379
-  password: ""
+  password: "${REDIS_PASSWORD}" # 從環境變數讀取
   db: 0
+  # 效能優化設定
+  pool_size: 20
+  min_idle_conns: 5
+  dial_timeout_seconds: 5
+  read_timeout_seconds: 3
+  write_timeout_seconds: 3
+  # 記憶體管理
+  max_memory_policy: "allkeys-lru"
 
+# 伺服器配置 - 生產優化
 server:
   port: 8080
-  mode: release
+  mode: release # Gin 生產模式
+  # 效能設定
+  read_timeout_seconds: 30
+  write_timeout_seconds: 30
+  idle_timeout_seconds: 120
+  # 安全標頭
+  enable_cors: false # 由 Nginx 處理
+  enable_gzip: false # 由 Nginx 處理
+  # 速率限制
+  rate_limit_per_minute: 1000
+  burst_limit: 100
 
-# 年齡驗證配置
+# 年齡驗證配置 - 合規與安全
 age_verification:
   minimum_age: 18
   verification_methods:
     - "birth_date"
     - "id_document"
+    - "government_id" # 新增政府身分證驗證
   verification_expiry_days: 365
   strict_mode: true
+  # 審核流程
+  require_manual_review: true
+  auto_approve_threshold_score: 0.95
 
-# JWT 配置 (生產環境應使用環境變數)
+# JWT 配置 - 企業級安全
 jwt:
-  secret: "${JWT_SECRET_KEY}" # 從環境變數讀取
-  expiry_hours: 24
+  secret: "${JWT_SECRET_KEY}" # 從環境變數讀取 (至少32字元)
+  expiry_hours: 2 # 縮短為2小時增加安全性
   refresh_expiry_days: 7
-  issuer: "dating-app"
+  issuer: "dating-app-prod"
+  audience: "dating-app-users"
+  # 安全增強
+  algorithm: "HS256"
+  require_https: true
+  same_site: "strict"
 
-# 檔案上傳配置
+# 檔案上傳配置 - 安全與效能
 upload:
-  max_file_size_mb: 10
+  max_file_size_mb: 5 # 降低至5MB減少負載
   allowed_types:
     - "image/jpeg"
     - "image/png"
     - "image/webp"
   photo_upload_path: "/app/static/uploads/photos"
+  # 安全設定
+  enable_virus_scan: true
+  enable_content_filter: true
+  max_photos_per_user: 6
+  # 圖片處理
+  auto_resize: true
+  max_width: 1920
+  max_height: 1920
+  quality: 85
 
-# WebSocket 配置
+# WebSocket 配置 - 高併發優化
 websocket:
-  max_connections: 1000
+  max_connections: 2000 # 增加至2000支援更多用戶
   read_buffer_size: 1024
   write_buffer_size: 1024
-  ping_period_seconds: 54
+  # 連線管理
+  ping_interval_seconds: 30
+  pong_wait_seconds: 60
+  write_wait_seconds: 10
+  # 訊息限制
+  max_message_size: 512
+  message_rate_limit: 50 # 每分鐘最多50條訊息
 
+# 日誌配置 - 生產級監控
 logging:
-  level: warning
-  format: json
+  level: "info" # 生產環境使用 info 級別
+  format: "json" # JSON 格式便於解析
+  output: "stdout"
+  # 日誌輪轉
+  max_size_mb: 100
+  max_backups: 3
+  max_age_days: 30
+  compress: true
+  # 結構化日誌
+  include_caller: false
+  include_stack_trace: true
+
+# 監控與指標配置
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    path: "/metrics"
+    port: 9090
+  health_check:
+    enabled: true
+    path: "/health"
+    interval_seconds: 30
+  # 效能指標
+  collect_runtime_metrics: true
+  collect_db_metrics: true
+  collect_http_metrics: true
+
+# 快取配置 - 效能優化
+cache:
+  enabled: true
+  default_ttl_seconds: 300 # 5分鐘預設TTL
+  # 快取策略
+  user_profile_ttl: 600 # 使用者資料快取10分鐘
+  match_results_ttl: 1800 # 配對結果快取30分鐘
+  chat_rooms_ttl: 3600 # 聊天室快取1小時
+
+# 安全配置 - 企業級防護
+security:
+  # HTTPS 設定
+  tls_enabled: true
+  min_tls_version: "1.2"
+  # 安全標頭
+  hsts_max_age: 31536000 # 1年
+  content_security_policy: "default-src 'self'"
+  x_frame_options: "DENY"
+  x_content_type_options: "nosniff"
+  # 速率限制
+  enable_rate_limiting: true
+  global_rate_limit: 1000 # 每分鐘1000請求
+  login_rate_limit: 5 # 每分鐘5次登入嘗試
+  # 防護機制
+  enable_request_validation: true
+  max_request_size_mb: 10
+  request_timeout_seconds: 30
+
+# 配對演算法配置 - 高效能
+matching:
+  algorithm: "hybrid" # 混合演算法
+  max_distance_km: 50 # 最大距離50公里
+  batch_size: 100 # 批次處理100個使用者
+  # 效能優化
+  cache_enabled: true
+  cache_ttl_minutes: 15
+  parallel_processing: true
+  max_goroutines: 20
+  # 品質控制
+  min_profile_completeness: 0.8
+  require_photo: true
+  active_user_days: 30
+
+# 通知配置 - 即時通訊
+notifications:
+  enabled: true
+  # 推播通知
+  push_notifications:
+    enabled: true
+    provider: "fcm" # Firebase Cloud Messaging
+    api_key: "${FCM_API_KEY}"
+  # 電子郵件通知
+  email:
+    enabled: true
+    smtp_host: "${SMTP_HOST}"
+    smtp_port: 587
+    username: "${SMTP_USERNAME}"
+    password: "${SMTP_PASSWORD}"
+    from_address: "noreply@datingapp.com"
+  # 通知類型
+  match_notifications: true
+  message_notifications: true
+  system_notifications: true

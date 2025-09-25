@@ -226,16 +226,16 @@ func (m *WebSocketAuthMiddleware) UserStatusMiddleware() gin.HandlerFunc {
 		// TODO: 這裡應該檢查用戶是否被封鎖、停用等
 		// userService.IsUserActive(userID.(uint))
 		// userService.IsUserBlocked(userID.(uint))
-		
+
 		// 設置用戶最後活動時間
 		c.Set("last_activity", time.Now())
-		
+
 		// 暫時記錄用戶狀態檢查
 		fmt.Printf("用戶狀態檢查: 用戶 %v\n", userID)
-		
+
 		c.Next()
 	}
-}// WebSocketSecurityMiddleware 安全中間件
+} // WebSocketSecurityMiddleware 安全中間件
 func (m *WebSocketAuthMiddleware) WebSocketSecurityMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 設置安全標頭

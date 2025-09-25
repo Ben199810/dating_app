@@ -4,12 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
 	"golang_dev_docker/domain/entity"
 	"golang_dev_docker/domain/repository"
 )
+
+// WebSocketNotifier WebSocket 通知介面
+type WebSocketNotifier interface {
+	SendToUser(userID uint, message interface{}) error
+	BroadcastToUsers(userIDs []uint, message interface{}) error
+}
 
 // ChatService 聊天業務邏輯服務
 // 負責聊天訊息處理、歷史管理、WebSocket連接管理等核心業務邏輯
@@ -19,6 +26,7 @@ type ChatService struct {
 	websocketRepo repository.WebSocketRepository
 	matchRepo     repository.MatchRepository
 	userRepo      repository.UserRepository
+	wsNotifier    WebSocketNotifier // 可選的 WebSocket 通知器
 }
 
 // NewChatService 創建新的聊天服務實例
@@ -35,7 +43,13 @@ func NewChatService(
 		websocketRepo: websocketRepo,
 		matchRepo:     matchRepo,
 		userRepo:      userRepo,
+		wsNotifier:    nil, // 預設不使用 WebSocket 通知
 	}
+}
+
+// SetWebSocketNotifier 設定 WebSocket 通知器
+func (s *ChatService) SetWebSocketNotifier(notifier WebSocketNotifier) {
+	s.wsNotifier = notifier
 }
 
 // SendMessageRequest 發送訊息請求
@@ -144,7 +158,21 @@ func (s *ChatService) SendMessage(ctx context.Context, req *SendMessageRequest) 
 	// 更新聊天活躍狀態
 	if err := s.chatListRepo.UpdateChatActivity(ctx, req.MatchID, time.Now()); err != nil {
 		// 記錄錯誤但不影響訊息發送
-		// 可以考慮使用日誌系統記錄
+		log.Printf("更新聊天活躍狀態失敗: %v", err)
+	}
+
+	// 發送 WebSocket 通知給接收者
+	if s.wsNotifier != nil {
+		notificationData := map[string]interface{}{
+			"type":      "new_message",
+			"message":   message,
+			"match_id":  req.MatchID,
+			"sender_id": req.SenderID,
+		}
+
+		if err := s.wsNotifier.SendToUser(req.ReceiverID, notificationData); err != nil {
+			log.Printf("發送 WebSocket 通知失敗 (用戶 %d): %v", req.ReceiverID, err)
+		}
 	}
 
 	return &MessageResponse{

@@ -4,10 +4,32 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"golang_dev_docker/domain/entity"
 	"golang_dev_docker/domain/repository"
 )
+
+// MatchingCacheInterface 配對快取介面
+type MatchingCacheInterface interface {
+	CachePotentialMatches(userID uint, matches []*entity.User) error
+	GetPotentialMatches(userID uint) ([]*entity.User, error)
+	InvalidatePotentialMatches(userID uint) error
+	CacheUserMatches(userID uint, status entity.MatchStatus, matches []*entity.Match) error
+	GetUserMatches(userID uint, status entity.MatchStatus) ([]*entity.Match, error)
+	InvalidateUserMatches(userID uint, status entity.MatchStatus) error
+	InvalidateAllUserMatches(userID uint) error
+	CacheMatchingStats(userID uint, stats *repository.MatchingStats) error
+	GetMatchingStats(userID uint) (*repository.MatchingStats, error)
+	InvalidateMatchingStats(userID uint) error
+	CacheCompatibilityScore(user1ID, user2ID uint, score float64) error
+	GetCompatibilityScore(user1ID, user2ID uint) (float64, error)
+	CacheNearbyUsers(userID uint, maxDistance int, users []*entity.User) error
+	GetNearbyUsers(userID uint, maxDistance int) ([]*entity.User, error)
+	CacheCommonInterestUsers(userID uint, users []*entity.User) error
+	GetCommonInterestUsers(userID uint) ([]*entity.User, error)
+	InvalidateUserCache(userID uint) error
+}
 
 // MatchingService 配對業務邏輯服務
 // 負責配對演算法、滑動處理、推薦系統等核心業務邏輯
@@ -16,6 +38,7 @@ type MatchingService struct {
 	algorithmRepo repository.MatchingAlgorithmRepository
 	userRepo      repository.UserRepository
 	profileRepo   repository.UserProfileRepository
+	cache         MatchingCacheInterface // 可選的快取服務
 }
 
 // NewMatchingService 創建新的配對服務實例
@@ -30,7 +53,13 @@ func NewMatchingService(
 		algorithmRepo: algorithmRepo,
 		userRepo:      userRepo,
 		profileRepo:   profileRepo,
+		cache:         nil, // 預設不使用快取
 	}
+}
+
+// SetCache 設定快取服務
+func (s *MatchingService) SetCache(cache MatchingCacheInterface) {
+	s.cache = cache
 }
 
 // SwipeRequest 滑動請求
@@ -121,6 +150,23 @@ func (s *MatchingService) ProcessSwipe(ctx context.Context, req *SwipeRequest) (
 		return nil, fmt.Errorf("處理滑動失敗: %w", err)
 	}
 
+	// 清除相關快取
+	if s.cache != nil {
+		// 清除兩位用戶的潛在配對快取
+		_ = s.cache.InvalidatePotentialMatches(req.UserID)
+		_ = s.cache.InvalidatePotentialMatches(req.TargetUserID)
+
+		if isMatch {
+			// 如果配對成功，清除配對列表快取
+			_ = s.cache.InvalidateUserMatches(req.UserID, entity.MatchStatusMatched)
+			_ = s.cache.InvalidateUserMatches(req.TargetUserID, entity.MatchStatusMatched)
+
+			// 清除配對統計快取
+			_ = s.cache.InvalidateMatchingStats(req.UserID)
+			_ = s.cache.InvalidateMatchingStats(req.TargetUserID)
+		}
+	}
+
 	response := &SwipeResponse{
 		Success: true,
 		IsMatch: isMatch,
@@ -141,6 +187,14 @@ func (s *MatchingService) ProcessSwipe(ctx context.Context, req *SwipeRequest) (
 // GetPotentialMatches 獲取潛在配對對象
 // 根據用戶偏好和配對演算法推薦合適的配對對象
 func (s *MatchingService) GetPotentialMatches(ctx context.Context, req *PotentialMatchRequest) ([]*entity.User, error) {
+	// 嘗試從快取獲取
+	if s.cache != nil {
+		cachedMatches, err := s.cache.GetPotentialMatches(req.UserID)
+		if err == nil && len(cachedMatches) > 0 {
+			return cachedMatches, nil
+		}
+	}
+
 	// 驗證用戶存在
 	user, err := s.userRepo.GetByID(ctx, req.UserID)
 	if err != nil {
@@ -161,18 +215,40 @@ func (s *MatchingService) GetPotentialMatches(ctx context.Context, req *Potentia
 	params := s.buildMatchingParams(profile, req)
 
 	// 獲取潛在配對
-	potentialMatches, err := s.algorithmRepo.GetPotentialMatches(ctx, req.UserID, params)
-	if err != nil {
-		return nil, fmt.Errorf("獲取潛在配對失敗: %w", err)
+	var potentialMatches []*entity.User
+	if s.algorithmRepo != nil {
+		potentialMatches, err = s.algorithmRepo.GetPotentialMatches(ctx, req.UserID, params)
+		if err != nil {
+			return nil, fmt.Errorf("獲取潛在配對失敗: %w", err)
+		}
+	} else {
+		// 如果沒有演算法儲存庫，返回空列表
+		potentialMatches = make([]*entity.User, 0)
+		log.Printf("警告：配對演算法儲存庫未初始化，返回空配對列表 (用戶 %d)", req.UserID)
 	}
 
-	// 根據相容性分數排序（已在 repository 層處理）
+	// 快取結果
+	if s.cache != nil && len(potentialMatches) > 0 {
+		_ = s.cache.CachePotentialMatches(req.UserID, potentialMatches)
+	}
+
 	return potentialMatches, nil
 }
 
 // GetUserMatches 獲取用戶的配對列表
 // 返回用戶所有配對成功的記錄
 func (s *MatchingService) GetUserMatches(ctx context.Context, userID uint, status entity.MatchStatus) (*MatchListResponse, error) {
+	// 嘗試從快取獲取
+	if s.cache != nil {
+		cachedMatches, err := s.cache.GetUserMatches(userID, status)
+		if err == nil && len(cachedMatches) > 0 {
+			return &MatchListResponse{
+				Matches:    cachedMatches,
+				TotalCount: len(cachedMatches),
+			}, nil
+		}
+	}
+
 	// 驗證用戶存在
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
@@ -187,6 +263,11 @@ func (s *MatchingService) GetUserMatches(ctx context.Context, userID uint, statu
 	matches, err := s.matchRepo.GetUserMatches(ctx, userID, status)
 	if err != nil {
 		return nil, fmt.Errorf("獲取配對記錄失敗: %w", err)
+	}
+
+	// 快取結果
+	if s.cache != nil && len(matches) > 0 {
+		_ = s.cache.CacheUserMatches(userID, status, matches)
 	}
 
 	return &MatchListResponse{
@@ -236,12 +317,36 @@ func (s *MatchingService) UnmatchUser(ctx context.Context, userID, targetUserID 
 	}
 
 	// 更新配對狀態為未配對
-	return s.matchRepo.UpdateMatchStatus(ctx, match.ID, entity.MatchStatusUnmatched)
+	err = s.matchRepo.UpdateMatchStatus(ctx, match.ID, entity.MatchStatusUnmatched)
+	if err != nil {
+		return err
+	}
+
+	// 清除相關快取
+	if s.cache != nil {
+		// 清除配對列表快取
+		_ = s.cache.InvalidateUserMatches(userID, entity.MatchStatusMatched)
+		_ = s.cache.InvalidateUserMatches(targetUserID, entity.MatchStatusMatched)
+
+		// 清除配對統計快取
+		_ = s.cache.InvalidateMatchingStats(userID)
+		_ = s.cache.InvalidateMatchingStats(targetUserID)
+	}
+
+	return nil
 }
 
 // GetMatchingStats 獲取用戶配對統計
 // 提供用戶配對數據的分析統計
 func (s *MatchingService) GetMatchingStats(ctx context.Context, userID uint) (*repository.MatchingStats, error) {
+	// 嘗試從快取獲取
+	if s.cache != nil {
+		cachedStats, err := s.cache.GetMatchingStats(userID)
+		if err == nil {
+			return cachedStats, nil
+		}
+	}
+
 	// 驗證用戶存在
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
@@ -252,12 +357,38 @@ func (s *MatchingService) GetMatchingStats(ctx context.Context, userID uint) (*r
 		return nil, errors.New("用戶未啟用")
 	}
 
-	return s.algorithmRepo.GetMatchingStats(ctx, userID)
+	// 從儲存庫獲取統計資料
+	var stats *repository.MatchingStats
+	if s.algorithmRepo != nil {
+		stats, err = s.algorithmRepo.GetMatchingStats(ctx, userID)
+		if err != nil {
+			return nil, fmt.Errorf("獲取配對統計失敗: %w", err)
+		}
+	} else {
+		// 如果沒有演算法儲存庫，返回空統計
+		stats = &repository.MatchingStats{}
+		log.Printf("警告：配對演算法儲存庫未初始化，返回空統計資料 (用戶 %d)", userID)
+	}
+
+	// 快取結果
+	if s.cache != nil && stats != nil {
+		_ = s.cache.CacheMatchingStats(userID, stats)
+	}
+
+	return stats, nil
 }
 
 // CalculateCompatibilityScore 計算兩個用戶的相容性分數
 // 用於推薦演算法和配對品質評估
 func (s *MatchingService) CalculateCompatibilityScore(ctx context.Context, user1ID, user2ID uint) (float64, error) {
+	// 嘗試從快取獲取
+	if s.cache != nil {
+		cachedScore, err := s.cache.GetCompatibilityScore(user1ID, user2ID)
+		if err == nil {
+			return cachedScore, nil
+		}
+	}
+
 	// 驗證用戶存在
 	if _, err := s.userRepo.GetByID(ctx, user1ID); err != nil {
 		return 0, fmt.Errorf("用戶1不存在: %w", err)
@@ -267,7 +398,26 @@ func (s *MatchingService) CalculateCompatibilityScore(ctx context.Context, user1
 		return 0, fmt.Errorf("用戶2不存在: %w", err)
 	}
 
-	return s.algorithmRepo.CalculateCompatibilityScore(ctx, user1ID, user2ID)
+	// 計算相容性分數
+	var score float64
+	var err error
+	if s.algorithmRepo != nil {
+		score, err = s.algorithmRepo.CalculateCompatibilityScore(ctx, user1ID, user2ID)
+		if err != nil {
+			return 0, fmt.Errorf("計算相容性分數失敗: %w", err)
+		}
+	} else {
+		// 如果沒有演算法儲存庫，返回預設分數
+		score = 0.5 // 預設中等相容性
+		log.Printf("警告：配對演算法儲存庫未初始化，返回預設相容性分數 (用戶 %d, %d)", user1ID, user2ID)
+	}
+
+	// 快取結果
+	if s.cache != nil {
+		_ = s.cache.CacheCompatibilityScore(user1ID, user2ID, score)
+	}
+
+	return score, nil
 }
 
 // GetUsersNearby 獲取附近用戶

@@ -54,14 +54,16 @@ func DefaultDatabaseConfig() *DatabaseConfig {
 
 // DatabaseManager 資料庫管理器
 type DatabaseManager struct {
-	db     *gorm.DB
-	sqlDB  *sql.DB
-	config *DatabaseConfig
+	db        *gorm.DB
+	sqlDB     *sql.DB
+	config    *DatabaseConfig
+	migration *Migration
+	seeder    *Seeder
 }
 
 // NewDatabaseManager 建立新的資料庫管理器
 func NewDatabaseManager(config *DatabaseConfig) (*DatabaseManager, error) {
-	log.Printf("資料庫配置: Host=%s, Port=%d, Database=%s, Username=%s", 
+	log.Printf("資料庫配置: Host=%s, Port=%d, Database=%s, Username=%s",
 		config.Host, config.Port, config.Database, config.Username)
 	dsn := buildDSN(config)
 
@@ -95,9 +97,11 @@ func NewDatabaseManager(config *DatabaseConfig) (*DatabaseManager, error) {
 	}
 
 	manager := &DatabaseManager{
-		db:     db,
-		sqlDB:  sqlDB,
-		config: config,
+		db:        db,
+		sqlDB:     sqlDB,
+		config:    config,
+		migration: NewMigration(db),
+		seeder:    NewSeeder(db),
 	}
 
 	log.Printf("資料庫連接成功: %s:%d/%s", config.Host, config.Port, config.Database)
@@ -393,4 +397,80 @@ func (dm *DatabaseManager) WithContext(ctx context.Context) *gorm.DB {
 // GetConfig 獲取資料庫配置
 func (dm *DatabaseManager) GetConfig() *DatabaseConfig {
 	return dm.config
+}
+
+// 遷移和種子資料管理
+
+// AutoMigrate 執行資料庫遷移
+func (dm *DatabaseManager) AutoMigrate() error {
+	if dm.migration == nil {
+		return fmt.Errorf("遷移管理器未初始化")
+	}
+	return dm.migration.AutoMigrate()
+}
+
+// SeedData 植入種子資料
+func (dm *DatabaseManager) SeedData() error {
+	if dm.seeder == nil {
+		return fmt.Errorf("種子資料管理器未初始化")
+	}
+	return dm.seeder.SeedAll()
+}
+
+// CheckTablesExist 檢查表是否存在
+func (dm *DatabaseManager) CheckTablesExist() (map[string]bool, error) {
+	if dm.migration == nil {
+		return nil, fmt.Errorf("遷移管理器未初始化")
+	}
+	return dm.migration.CheckTablesExist()
+}
+
+// DropAllTables 刪除所有表（危險操作）
+func (dm *DatabaseManager) DropAllTables() error {
+	if dm.migration == nil {
+		return fmt.Errorf("遷移管理器未初始化")
+	}
+	return dm.migration.DropAllTables()
+}
+
+// ClearAllData 清除所有資料（保留表結構）
+func (dm *DatabaseManager) ClearAllData() error {
+	if dm.seeder == nil {
+		return fmt.Errorf("種子資料管理器未初始化")
+	}
+	return dm.seeder.ClearAll()
+}
+
+// InitializeDatabase 初始化資料庫（遷移+種子資料）
+func (dm *DatabaseManager) InitializeDatabase(forceReset bool) error {
+	log.Println("開始初始化資料庫...")
+
+	if forceReset {
+		log.Println("強制重置模式：刪除所有表並重新創建")
+		if err := dm.DropAllTables(); err != nil {
+			log.Printf("警告：刪除表失敗: %v", err)
+		}
+	}
+
+	// 執行遷移
+	if err := dm.AutoMigrate(); err != nil {
+		return fmt.Errorf("資料庫遷移失敗: %w", err)
+	}
+
+	// 檢查是否需要植入種子資料
+	tables, err := dm.CheckTablesExist()
+	if err != nil {
+		log.Printf("警告：檢查表失敗: %v", err)
+	} else {
+		log.Printf("資料庫表狀態: %+v", tables)
+	}
+
+	// 植入種子資料
+	if err := dm.SeedData(); err != nil {
+		log.Printf("警告：種子資料植入失敗: %v", err)
+		// 不返回錯誤，因為種子資料失敗不應該阻止應用程式啟動
+	}
+
+	log.Println("資料庫初始化完成")
+	return nil
 }

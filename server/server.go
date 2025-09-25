@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"golang_dev_docker/domain/usecase"
 	"golang_dev_docker/infrastructure/mysql"
 	"golang_dev_docker/infrastructure/redis"
 	"golang_dev_docker/server/middleware"
@@ -17,6 +18,56 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+// WebSocketNotifierAdapter WebSocket 管理器適配器
+// 實作 ChatService 所需的 WebSocketNotifier 介面
+type WebSocketNotifierAdapter struct {
+	manager *websocket.Manager
+}
+
+// SendToUser 發送訊息給特定用戶
+func (w *WebSocketNotifierAdapter) SendToUser(userID uint, message interface{}) error {
+	if w.manager == nil {
+		return fmt.Errorf("WebSocket 管理器未初始化")
+	}
+
+	// 將訊息發送給指定用戶的所有連接
+	// 提取訊息類型，如果沒有則使用預設類型
+	messageType := "notification"
+	if msgMap, ok := message.(map[string]interface{}); ok {
+		if msgType, exists := msgMap["type"]; exists {
+			if typeStr, ok := msgType.(string); ok {
+				messageType = typeStr
+			}
+		}
+	}
+
+	w.manager.SendToUser(userID, messageType, message)
+	return nil
+}
+
+// BroadcastToUsers 廣播訊息給多個用戶
+func (w *WebSocketNotifierAdapter) BroadcastToUsers(userIDs []uint, message interface{}) error {
+	if w.manager == nil {
+		return fmt.Errorf("WebSocket 管理器未初始化")
+	}
+
+	// 提取訊息類型
+	messageType := "notification"
+	if msgMap, ok := message.(map[string]interface{}); ok {
+		if msgType, exists := msgMap["type"]; exists {
+			if typeStr, ok := msgType.(string); ok {
+				messageType = typeStr
+			}
+		}
+	}
+
+	// 依次發送給每個用戶
+	for _, userID := range userIDs {
+		w.manager.SendToUser(userID, messageType, message)
+	}
+	return nil
+}
 
 // ServerConfig 伺服器配置
 type ServerConfig struct {
@@ -63,6 +114,11 @@ type Server struct {
 	wsManager    *websocket.Manager
 	chatHandler  *websocket.ChatHandler
 
+	// 業務服務
+	userService     *usecase.UserService
+	matchingService *usecase.MatchingService
+	chatService     *usecase.ChatService
+
 	// 中間件
 	jwtAuth        *middleware.JWTAuthMiddleware
 	wsAuth         *middleware.WebSocketAuthMiddleware
@@ -90,6 +146,12 @@ func (s *Server) InitializeDatabase(dbConfig *mysql.DatabaseConfig) error {
 	s.dbManager, err = mysql.NewDatabaseManager(dbConfig)
 	if err != nil {
 		return fmt.Errorf("初始化資料庫失敗: %w", err)
+	}
+
+	// 執行資料庫遷移和種子資料植入
+	if err := s.dbManager.InitializeDatabase(false); err != nil {
+		log.Printf("警告：資料庫初始化失敗: %v", err)
+		// 不返回錯誤，允許應用程式繼續運行
 	}
 
 	log.Println("資料庫連接初始化成功")
@@ -120,6 +182,84 @@ func (s *Server) InitializeWebSocket() {
 	go s.wsManager.Run()
 
 	log.Println("WebSocket 管理器初始化成功")
+}
+
+// InitializeServices 初始化業務服務
+func (s *Server) InitializeServices() error {
+	if s.dbManager == nil {
+		return fmt.Errorf("資料庫管理器未初始化")
+	}
+
+	// 獲取資料庫連接
+	db := s.dbManager.GetDB()
+	if db == nil {
+		return fmt.Errorf("無法獲取資料庫連接")
+	}
+
+	// 創建儲存庫實例
+	userRepo := mysql.NewUserRepository(db)
+	userProfileRepo := mysql.NewUserProfileRepository(db)
+	matchRepo := mysql.NewMatchRepository(db)
+	chatRepo := mysql.NewChatRepository(db)
+	chatListRepo := mysql.NewChatListRepository(db)
+	websocketRepo := mysql.NewWebSocketRepository(db)
+
+	// 創建 Redis 快取服務（如果可用）
+	var matchingCache *redis.MatchingCacheService
+
+	if s.redisClient != nil {
+		// 初始化會話快取服務但暫時不存儲引用（將在後續整合到認證中間件）
+		_ = redis.NewSessionCacheService(s.redisClient)
+
+		// 初始化配對快取服務
+		matchingCache = redis.NewMatchingCacheService(s.redisClient)
+
+		log.Println("Redis 快取服務初始化成功")
+	}
+
+	// 初始化用戶服務
+	// TODO: 需要添加缺少的儲存庫（PhotoRepository, InterestRepository, AgeVerificationRepository）
+	s.userService = usecase.NewUserService(
+		userRepo,
+		userProfileRepo,
+		nil, // photoRepo - 需要實作
+		nil, // interestRepo - 需要實作
+		nil, // ageVerificationRepo - 需要實作
+	)
+
+	// 初始化配對服務
+	// TODO: 需要添加 MatchingAlgorithmRepository
+	s.matchingService = usecase.NewMatchingService(
+		matchRepo,
+		nil, // algorithmRepo - 需要實作
+		userRepo,
+		userProfileRepo,
+	)
+
+	// 設定配對快取（如果可用）
+	if matchingCache != nil {
+		s.matchingService.SetCache(matchingCache)
+		log.Println("配對服務快取整合完成")
+	}
+
+	// 初始化聊天服務
+	s.chatService = usecase.NewChatService(
+		chatRepo,
+		chatListRepo,
+		websocketRepo,
+		matchRepo,
+		userRepo,
+	)
+
+	// 整合 WebSocket 通知器（需要在 WebSocket 管理器初始化後設定）
+	if s.wsManager != nil {
+		wsNotifier := &WebSocketNotifierAdapter{manager: s.wsManager}
+		s.chatService.SetWebSocketNotifier(wsNotifier)
+		log.Println("聊天服務 WebSocket 通知整合完成")
+	}
+
+	log.Println("業務服務初始化成功")
+	return nil
 }
 
 // InitializeMiddleware 初始化中間件
