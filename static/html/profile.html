@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>個人檔案 - 18+ 交友聊天</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/profile.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+        }
+
+        .avatar-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 5px solid #667eea;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e9ecef;
+            font-size: 48px;
+            color: #667eea;
+            overflow: hidden;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-upload {
+            margin: 20px 0;
+        }
+
+        .upload-btn {
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .upload-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .photo-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .photo-item {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-item .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .main-content {
+            padding: 0;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        .form-section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .form-group input, 
+        .form-group select, 
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .range-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .range-input input[type="range"] {
+            flex: 1;
+        }
+
+        .range-value {
+            background: #667eea;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .interests-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .interest-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e1e5e9;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .interest-item:hover {
+            background: #f0f2ff;
+            border-color: #667eea;
+        }
+
+        .interest-item.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .success-message, .error-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .location-section {
+            position: relative;
+        }
+
+        .location-status {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .location-status.enabled {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .interests-grid {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>個人檔案</h1>
+            <p>完善您的個人資料，提高配對成功率</p>
+        </div>
+
+        <div id="success-message" class="success-message">
+            個人資料已成功更新！
+        </div>
+
+        <div id="error-message" class="error-message">
+            更新失敗，請稍後再試
+        </div>
+
+        <div class="content">
+            <div class="sidebar">
+                <div class="avatar-section">
+                    <div class="avatar" id="avatar">
+                        👤
+                    </div>
+                    <div class="photo-upload">
+                        <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
+                        <button class="upload-btn" onclick="document.getElementById('avatar-upload').click()">
+                            更換頭像
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>📸 相片集</h3>
+                    <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                        最多可上傳6張照片，第一張將作為主要照片
+                    </p>
+                    <input type="file" id="photo-upload" accept="image/*" multiple style="display: none;">
+                    <button class="upload-btn" onclick="document.getElementById('photo-upload').click()">
+                        上傳照片
+                    </button>
+                    
+                    <div class="photo-gallery" id="photo-gallery">
+                        <!-- 動態載入照片 -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <form id="profile-form">
+                    <div class="form-section">
+                        <h3>基本資料</h3>
+                        
+                        <div class="form-group">
+                            <label for="display-name">顯示名稱</label>
+                            <input type="text" id="display-name" name="display_name" maxlength="50" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="biography">自我介紹</label>
+                            <textarea id="biography" name="biography" rows="4" maxlength="500" 
+                                     placeholder="告訴大家關於您的故事..."></textarea>
+                            <small class="char-count">0/500 字符</small>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="gender">性別</label>
+                                <select id="gender" name="gender" disabled>
+                                    <option value="male">男性</option>
+                                    <option value="female">女性</option>
+                                    <option value="other">其他</option>
+                                </select>
+                                <small style="color: #666;">註冊後無法更改</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="show-age" name="show_age" checked>
+                                    顯示年齡
+                                </label>
+                                <small style="color: #666;">允許其他用戶看到您的年齡</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section location-section">
+                        <h3>📍 位置設定</h3>
+                        
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="enable-location" name="enable_location">
+                                啟用位置服務
+                            </label>
+                            <small style="color: #666;">幫助我們為您推薦附近的配對對象</small>
+                        </div>
+
+                        <div class="location-status" id="location-status">
+                            位置服務已關閉
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>💕 配對偏好</h3>
+                        
+                        <div class="form-group">
+                            <label for="max-distance">搜尋範圍</label>
+                            <div class="range-input">
+                                <input type="range" id="max-distance" name="max_distance" 
+                                       min="5" max="100" value="50" step="5">
+                                <span class="range-value" id="distance-value">50km</span>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="age-min">最小年齡</label>
+                                <div class="range-input">
+                                    <input type="range" id="age-min" name="age_range_min" 
+                                           min="18" max="99" value="18">
+                                    <span class="range-value" id="age-min-value">18歲</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="age-max">最大年齡</label>
+                                <div class="range-input">
+                                    <input type="range" id="age-max" name="age_range_max" 
+                                           min="18" max="99" value="99">
+                                    <span class="range-value" id="age-max-value">99歲</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>🎯 興趣愛好</h3>
+                        <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                            選擇您的興趣，系統會為您推薦有共同愛好的配對對象
+                        </p>
+                        <div class="interests-grid" id="interests-grid">
+                            <!-- 動態載入興趣標籤 -->
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button type="button" class="btn btn-secondary" onclick="history.back()">
+                            返回
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            保存更改
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/profile.js"></script>
+    <script>
+        // 基本的檔案上傳預覽
+        document.getElementById('avatar-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatar').innerHTML = 
+                        `<img src="${e.target.result}" alt="頭像">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 範圍滑桿即時更新
+        document.getElementById('max-distance').addEventListener('input', function() {
+            document.getElementById('distance-value').textContent = this.value + 'km';
+        });
+
+        document.getElementById('age-min').addEventListener('input', function() {
+            document.getElementById('age-min-value').textContent = this.value + '歲';
+            // 確保最小年齡不大於最大年齡
+            const maxAge = document.getElementById('age-max');
+            if (parseInt(this.value) > parseInt(maxAge.value)) {
+                maxAge.value = this.value;
+                document.getElementById('age-max-value').textContent = this.value + '歲';
+            }
+        });
+
+        document.getElementById('age-max').addEventListener('input', function() {
+            document.getElementById('age-max-value').textContent = this.value + '歲';
+            // 確保最大年齡不小於最小年齡
+            const minAge = document.getElementById('age-min');
+            if (parseInt(this.value) < parseInt(minAge.value)) {
+                minAge.value = this.value;
+                document.getElementById('age-min-value').textContent = this.value + '歲';
+            }
+        });
+
+        // 位置服務切換
+        document.getElementById('enable-location').addEventListener('change', function() {
+            const status = document.getElementById('location-status');
+            if (this.checked) {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        function(position) {
+                            status.textContent = `位置已獲取：${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`;
+                            status.classList.add('enabled');
+                        },
+                        function(error) {
+                            status.textContent = '位置獲取失敗，請檢查權限設定';
+                            status.classList.remove('enabled');
+                            document.getElementById('enable-location').checked = false;
+                        }
+                    );
+                } else {
+                    status.textContent = '您的瀏覽器不支援位置服務';
+                    this.checked = false;
+                }
+            } else {
+                status.textContent = '位置服務已關閉';
+                status.classList.remove('enabled');
+            }
+        });
+
+        // 字符計數
+        document.getElementById('biography').addEventListener('input', function() {
+            const remaining = 500 - this.value.length;
+            const counter = document.querySelector('.char-count');
+            counter.textContent = `${this.value.length}/500 字符`;
+            counter.style.color = remaining < 50 ? '#e74c3c' : '#666';
+        });
+
+        // 載入預設興趣標籤
+        const defaultInterests = [
+            '🎵 音樂', '🎬 電影', '📚 閱讀', '🏃‍♂️ 運動', '🍳 烹飪', '✈️ 旅遊',
+            '🎨 藝術', '💻 科技', '🐕 寵物', '🌱 園藝', '📸 攝影', '🎮 遊戲',
+            '🧘‍♀️ 瑜伽', '🍷 美食', '🏔️ 戶外', '💃 舞蹈'
+        ];
+
+        const interestsGrid = document.getElementById('interests-grid');
+        defaultInterests.forEach((interest, index) => {
+            const item = document.createElement('div');
+            item.className = 'interest-item';
+            item.innerHTML = `
+                <input type="checkbox" id="interest-${index}" name="interests" value="${interest}" style="display: none;">
+                <span>${interest}</span>
+            `;
+            item.addEventListener('click', function() {
+                const checkbox = this.querySelector('input');
+                checkbox.checked = !checkbox.checked;
+                this.classList.toggle('selected', checkbox.checked);
+            });
+            interestsGrid.appendChild(item);
+        });
+    </script>
+</body>
+</html>

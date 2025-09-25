@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聊天室 - 18+ 交友聊天</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/chat.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f5f7fa;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .chat-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .chat-sidebar {
+            width: 350px;
+            background: white;
+            border-right: 1px solid #e1e5e9;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .sidebar-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .search-bar {
+            padding: 15px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 20px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-bar input:focus {
+            border-color: #667eea;
+        }
+
+        .matches-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .match-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            position: relative;
+        }
+
+        .match-item:hover {
+            background: #f8f9fa;
+        }
+
+        .match-item.active {
+            background: #e8f0ff;
+            border-right: 3px solid #667eea;
+        }
+
+        .match-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #667eea;
+            margin-right: 15px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .match-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .match-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .match-name {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .match-last-message {
+            color: #666;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .match-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            flex-shrink: 0;
+        }
+
+        .match-time {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .unread-badge {
+            background: #e74c3c;
+            color: white;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .unread-badge.show {
+            display: block;
+        }
+
+        .online-indicator {
+            position: absolute;
+            top: 45px;
+            left: 55px;
+            width: 14px;
+            height: 14px;
+            background: #27ae60;
+            border: 2px solid white;
+            border-radius: 50%;
+            display: none;
+        }
+
+        .online-indicator.show {
+            display: block;
+        }
+
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .chat-header {
+            padding: 20px;
+            border-bottom: 1px solid #e1e5e9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+        }
+
+        .chat-user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #667eea;
+            margin-right: 15px;
+            overflow: hidden;
+        }
+
+        .chat-user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .chat-user-details h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .chat-user-status {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .chat-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-action-btn {
+            padding: 8px 12px;
+            border: 1px solid #e1e5e9;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .chat-action-btn:hover {
+            background: #f8f9fa;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+            scroll-behavior: smooth;
+        }
+
+        .message-group {
+            margin-bottom: 20px;
+        }
+
+        .message-date {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .message-date::before,
+        .message-date::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 100px;
+            height: 1px;
+            background: #e1e5e9;
+        }
+
+        .message-date::before {
+            left: calc(50% - 150px);
+        }
+
+        .message-date::after {
+            right: calc(50% - 150px);
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 10px;
+            align-items: flex-end;
+        }
+
+        .message.sent {
+            justify-content: flex-end;
+        }
+
+        .message.received {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 20px;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .message.sent .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-right: 10px;
+        }
+
+        .message.received .message-content {
+            background: #f1f3f4;
+            color: #333;
+            margin-left: 10px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 5px;
+            align-self: flex-end;
+        }
+
+        .message.sent .message-time {
+            color: #999;
+        }
+
+        .message.received .message-time {
+            color: #666;
+        }
+
+        .message-status {
+            font-size: 10px;
+            color: #999;
+            margin-left: 5px;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e1e5e9;
+        }
+
+        .chat-input {
+            display: flex;
+            align-items: flex-end;
+            gap: 15px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 25px;
+            border: 1px solid #e1e5e9;
+        }
+
+        .chat-input:focus-within {
+            border-color: #667eea;
+        }
+
+        .input-field {
+            flex: 1;
+            min-height: 20px;
+            max-height: 100px;
+            padding: 10px 0;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 16px;
+            resize: none;
+            overflow-y: auto;
+        }
+
+        .input-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .input-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .send-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .no-chat-selected {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+            text-align: center;
+        }
+
+        .no-chat-selected .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .no-chat-selected h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .no-chat-selected p {
+            font-size: 16px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            color: #666;
+            font-size: 14px;
+            background: #f8f9fa;
+            border-top: 1px solid #e1e5e9;
+        }
+
+        .typing-dots {
+            display: inline-flex;
+            gap: 3px;
+            margin-left: 10px;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            background: #999;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                position: relative;
+            }
+            
+            .chat-sidebar {
+                position: absolute;
+                left: 0;
+                top: 0;
+                height: 100%;
+                z-index: 1000;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .chat-sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .chat-main {
+                width: 100%;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+                background: none;
+                border: none;
+                font-size: 20px;
+                color: #667eea;
+                cursor: pointer;
+            }
+        }
+
+        .desktop-only {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .desktop-only {
+                display: none;
+            }
+            
+            .mobile-only {
+                display: block;
+            }
+        }
+
+        .mobile-only {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- 側邊欄 - 配對列表 -->
+        <div class="chat-sidebar" id="chat-sidebar">
+            <div class="sidebar-header">
+                <h1>💬 聊天室</h1>
+                <p class="subtitle">與配對成功的對象開始對話</p>
+            </div>
+
+            <div class="search-bar">
+                <input type="text" placeholder="搜尋配對對象..." id="search-input">
+            </div>
+
+            <div class="matches-list" id="matches-list">
+                <!-- 配對列表將動態載入 -->
+                <div class="match-item loading-placeholder" style="text-align: center; padding: 40px; color: #999;">
+                    正在載入配對列表...
+                </div>
+            </div>
+        </div>
+
+        <!-- 主聊天區域 -->
+        <div class="chat-main">
+            <!-- 預設顯示 - 未選擇聊天 -->
+            <div class="no-chat-selected" id="no-chat-selected">
+                <div class="icon">💕</div>
+                <h2>選擇一個配對開始聊天</h2>
+                <p>從左側列表選擇您想要聊天的對象</p>
+                <button class="mobile-only" onclick="toggleSidebar()" style="margin-top: 20px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 20px; cursor: pointer;">
+                    查看配對列表
+                </button>
+            </div>
+
+            <!-- 聊天介面 - 初始隱藏 -->
+            <div class="chat-interface hidden" id="chat-interface">
+                <div class="chat-header">
+                    <div class="chat-user-info">
+                        <button class="mobile-only mobile-menu-btn" onclick="toggleSidebar()">
+                            ‹
+                        </button>
+                        <div class="chat-user-avatar" id="chat-user-avatar">
+                            👤
+                        </div>
+                        <div class="chat-user-details">
+                            <h3 id="chat-user-name">選擇配對對象</h3>
+                            <div class="chat-user-status" id="chat-user-status">離線</div>
+                        </div>
+                    </div>
+                    <div class="chat-actions desktop-only">
+                        <button class="chat-action-btn" title="查看檔案">
+                            👤
+                        </button>
+                        <button class="chat-action-btn" title="更多選項">
+                            ⋯
+                        </button>
+                    </div>
+                </div>
+
+                <div class="typing-indicator hidden" id="typing-indicator">
+                    <span id="typing-user">對方</span>正在輸入
+                    <div class="typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chat-messages">
+                    <!-- 訊息將動態載入 -->
+                </div>
+
+                <div class="chat-input-container">
+                    <div class="chat-input">
+                        <textarea class="input-field" id="message-input" 
+                                placeholder="輸入訊息..." rows="1"></textarea>
+                        <div class="input-actions">
+                            <button class="input-btn" title="表情符號" onclick="toggleEmojiPicker()">
+                                😊
+                            </button>
+                            <button class="input-btn" title="上傳圖片">
+                                📎
+                            </button>
+                            <button class="send-btn" id="send-btn" onclick="sendMessage()">
+                                ➤
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/chat.js"></script>
+    <script>
+        class ChatApp {
+            constructor() {
+                this.currentMatchId = null;
+                this.matches = [];
+                this.messages = {};
+                this.websocket = null;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.loadMatches();
+                this.setupWebSocket();
+            }
+
+            bindEvents() {
+                // 訊息輸入框事件
+                const messageInput = document.getElementById('message-input');
+                messageInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                messageInput.addEventListener('input', () => {
+                    this.autoResizeTextarea();
+                    this.handleTyping();
+                });
+
+                // 搜尋功能
+                document.getElementById('search-input').addEventListener('input', (e) => {
+                    this.filterMatches(e.target.value);
+                });
+
+                // 發送按鈕事件
+                document.getElementById('send-btn').addEventListener('click', () => {
+                    this.sendMessage();
+                });
+            }
+
+            async loadMatches() {
+                try {
+                    // 這裡應該調用真實的 API
+                    // const response = await fetch('/api/chat/matches');
+                    // const data = await response.json();
+                    
+                    // 模擬資料
+                    const mockMatches = this.generateMockMatches();
+                    this.matches = mockMatches;
+                    this.renderMatches();
+                    
+                } catch (error) {
+                    console.error('載入配對列表失敗:', error);
+                    this.showError('載入配對列表失敗');
+                }
+            }
+
+            generateMockMatches() {
+                const names = ['小雯', '美麗', '志明', '小華', '雅婷'];
+                const lastMessages = [
+                    '你好！很高興認識你 😊',
+                    '今天過得如何？',
+                    '想要一起出去走走嗎？',
+                    '謝謝你的關心',
+                    '晚安，明天聊～'
+                ];
+
+                return names.map((name, index) => ({
+                    match_id: index + 1,
+                    other_user_id: index + 1,
+                    other_user_name: name,
+                    other_user_avatar: null,
+                    last_message: lastMessages[index],
+                    last_message_time: new Date(Date.now() - Math.random() * 86400000),
+                    unread_count: Math.floor(Math.random() * 5),
+                    is_online: Math.random() > 0.5
+                }));
+            }
+
+            renderMatches() {
+                const matchesList = document.getElementById('matches-list');
+                if (this.matches.length === 0) {
+                    matchesList.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #999;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">💕</div>
+                            <h3>還沒有配對</h3>
+                            <p>快去配對頁面尋找有趣的人吧！</p>
+                            <button onclick="window.location.href='/static/html/matching.html'" 
+                                    style="margin-top: 15px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 20px; cursor: pointer;">
+                                開始配對
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                matchesList.innerHTML = this.matches.map(match => `
+                    <div class="match-item" data-match-id="${match.match_id}" onclick="selectMatch(${match.match_id})">
+                        <div class="match-avatar">
+                            ${match.other_user_avatar ? 
+                                `<img src="${match.other_user_avatar}" alt="${match.other_user_name}">` : 
+                                '👤'
+                            }
+                            <div class="online-indicator ${match.is_online ? 'show' : ''}"></div>
+                        </div>
+                        <div class="match-info">
+                            <div class="match-name">${match.other_user_name}</div>
+                            <div class="match-last-message">${match.last_message || '開始對話...'}</div>
+                        </div>
+                        <div class="match-meta">
+                            <div class="match-time">${this.formatTime(match.last_message_time)}</div>
+                            <div class="unread-badge ${match.unread_count > 0 ? 'show' : ''}">${match.unread_count}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            selectMatch(matchId) {
+                this.currentMatchId = matchId;
+                const match = this.matches.find(m => m.match_id === matchId);
+                if (!match) return;
+
+                // 更新選中狀態
+                document.querySelectorAll('.match-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                document.querySelector(`[data-match-id="${matchId}"]`).classList.add('active');
+
+                // 顯示聊天介面
+                this.showChatInterface(match);
+                
+                // 載入聊天歷史
+                this.loadChatHistory(matchId);
+
+                // 標記為已讀
+                this.markAsRead(matchId);
+
+                // 手機版關閉側邊欄
+                if (window.innerWidth <= 768) {
+                    this.hideSidebar();
+                }
+            }
+
+            showChatInterface(match) {
+                document.getElementById('no-chat-selected').classList.add('hidden');
+                document.getElementById('chat-interface').classList.remove('hidden');
+
+                // 更新聊天標題
+                document.getElementById('chat-user-name').textContent = match.other_user_name;
+                document.getElementById('chat-user-status').textContent = match.is_online ? '在線' : '離線';
+                
+                const avatar = document.getElementById('chat-user-avatar');
+                if (match.other_user_avatar) {
+                    avatar.innerHTML = `<img src="${match.other_user_avatar}" alt="${match.other_user_name}">`;
+                } else {
+                    avatar.innerHTML = '👤';
+                }
+            }
+
+            async loadChatHistory(matchId) {
+                try {
+                    // 這裡應該調用真實的 API
+                    // const response = await fetch(`/api/chat/matches/${matchId}/messages`);
+                    // const data = await response.json();
+                    
+                    // 模擬聊天歷史
+                    const mockMessages = this.generateMockMessages(matchId);
+                    this.messages[matchId] = mockMessages;
+                    this.renderMessages(matchMessages);
+                    
+                } catch (error) {
+                    console.error('載入聊天歷史失敗:', error);
+                }
+            }
+
+            generateMockMessages(matchId) {
+                const messages = [
+                    {
+                        id: 1,
+                        sender_id: matchId + 100, // 對方ID
+                        content: '你好！很高興認識你 😊',
+                        created_at: new Date(Date.now() - 3600000),
+                        type: 'text'
+                    },
+                    {
+                        id: 2,
+                        sender_id: 1, // 自己ID
+                        content: '你好！我也很高興認識你',
+                        created_at: new Date(Date.now() - 3300000),
+                        type: 'text'
+                    },
+                    {
+                        id: 3,
+                        sender_id: matchId + 100,
+                        content: '你平常都喜歡做什麼呢？',
+                        created_at: new Date(Date.now() - 3000000),
+                        type: 'text'
+                    }
+                ];
+                return messages;
+            }
+
+            renderMessages(messages) {
+                const messagesContainer = document.getElementById('chat-messages');
+                if (!messages || messages.length === 0) {
+                    messagesContainer.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #999;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">💬</div>
+                            <p>還沒有訊息，開始聊天吧！</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                messagesContainer.innerHTML = messages.map(message => {
+                    const isOwn = message.sender_id === 1; // 假設當前用戶ID為1
+                    return `
+                        <div class="message ${isOwn ? 'sent' : 'received'}">
+                            <div class="message-content">
+                                ${message.content}
+                                <div class="message-time">${this.formatTime(message.created_at)}</div>
+                            </div>
+                            ${isOwn ? '<div class="message-status">✓</div>' : ''}
+                        </div>
+                    `;
+                }).join('');
+
+                // 捲動到底部
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
+            async sendMessage() {
+                const input = document.getElementById('message-input');
+                const content = input.value.trim();
+                
+                if (!content || !this.currentMatchId) return;
+
+                try {
+                    // 清空輸入框
+                    input.value = '';
+                    this.autoResizeTextarea();
+
+                    // 添加訊息到UI（樂觀更新）
+                    this.addMessageToUI({
+                        id: Date.now(),
+                        sender_id: 1,
+                        content: content,
+                        created_at: new Date(),
+                        type: 'text'
+                    });
+
+                    // 發送到後端
+                    // const response = await fetch('/api/chat/messages', {
+                    //     method: 'POST',
+                    //     headers: { 'Content-Type': 'application/json' },
+                    //     body: JSON.stringify({
+                    //         match_id: this.currentMatchId,
+                    //         content: content,
+                    //         type: 'text'
+                    //     })
+                    // });
+
+                    // 更新配對列表中的最後訊息
+                    this.updateLastMessage(this.currentMatchId, content);
+                    
+                } catch (error) {
+                    console.error('發送訊息失敗:', error);
+                    this.showError('訊息發送失敗');
+                }
+            }
+
+            addMessageToUI(message) {
+                const messagesContainer = document.getElementById('chat-messages');
+                const isOwn = message.sender_id === 1;
+                
+                const messageElement = document.createElement('div');
+                messageElement.className = `message ${isOwn ? 'sent' : 'received'}`;
+                messageElement.innerHTML = `
+                    <div class="message-content">
+                        ${message.content}
+                        <div class="message-time">${this.formatTime(message.created_at)}</div>
+                    </div>
+                    ${isOwn ? '<div class="message-status">✓</div>' : ''}
+                `;
+
+                messagesContainer.appendChild(messageElement);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                // 保存到本地消息列表
+                if (!this.messages[this.currentMatchId]) {
+                    this.messages[this.currentMatchId] = [];
+                }
+                this.messages[this.currentMatchId].push(message);
+            }
+
+            setupWebSocket() {
+                // 這裡應該建立真實的 WebSocket 連接
+                // this.websocket = new WebSocket('ws://localhost:8080/ws');
+                
+                // 模擬 WebSocket 事件
+                setInterval(() => {
+                    if (this.currentMatchId && Math.random() < 0.1) {
+                        this.simulateIncomingMessage();
+                    }
+                }, 10000);
+            }
+
+            simulateIncomingMessage() {
+                const messages = ['嗯嗯，我也是這麼想的', '哈哈，真的嗎？', '聽起來很有趣！', '改天一起去吧'];
+                const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+                
+                this.addMessageToUI({
+                    id: Date.now(),
+                    sender_id: this.currentMatchId + 100,
+                    content: randomMessage,
+                    created_at: new Date(),
+                    type: 'text'
+                });
+
+                this.updateLastMessage(this.currentMatchId, randomMessage);
+            }
+
+            updateLastMessage(matchId, message) {
+                const match = this.matches.find(m => m.match_id === matchId);
+                if (match) {
+                    match.last_message = message;
+                    match.last_message_time = new Date();
+                    this.renderMatches();
+                }
+            }
+
+            markAsRead(matchId) {
+                const match = this.matches.find(m => m.match_id === matchId);
+                if (match) {
+                    match.unread_count = 0;
+                    this.renderMatches();
+                }
+            }
+
+            filterMatches(query) {
+                const items = document.querySelectorAll('.match-item');
+                items.forEach(item => {
+                    const name = item.querySelector('.match-name').textContent.toLowerCase();
+                    const message = item.querySelector('.match-last-message').textContent.toLowerCase();
+                    const visible = name.includes(query.toLowerCase()) || message.includes(query.toLowerCase());
+                    item.style.display = visible ? 'flex' : 'none';
+                });
+            }
+
+            autoResizeTextarea() {
+                const textarea = document.getElementById('message-input');
+                textarea.style.height = 'auto';
+                textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+            }
+
+            handleTyping() {
+                // 實際應用中這裡會通過 WebSocket 通知對方正在輸入
+            }
+
+            formatTime(date) {
+                if (!(date instanceof Date)) {
+                    date = new Date(date);
+                }
+                
+                const now = new Date();
+                const diff = now - date;
+                
+                if (diff < 60000) { // 1分鐘內
+                    return '剛剛';
+                } else if (diff < 3600000) { // 1小時內
+                    return Math.floor(diff / 60000) + '分鐘前';
+                } else if (diff < 86400000) { // 24小時內
+                    return date.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+                } else {
+                    return date.toLocaleDateString('zh-TW', { month: 'short', day: 'numeric' });
+                }
+            }
+
+            showError(message) {
+                // 這裡可以顯示錯誤提示
+                console.error(message);
+            }
+
+            hideSidebar() {
+                document.getElementById('chat-sidebar').classList.remove('show');
+            }
+        }
+
+        // 全域函數
+        function selectMatch(matchId) {
+            if (window.chatApp) {
+                window.chatApp.selectMatch(matchId);
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('chat-sidebar').classList.toggle('show');
+        }
+
+        function toggleEmojiPicker() {
+            // 實際應用中這裡會顯示表情符號選擇器
+            const input = document.getElementById('message-input');
+            input.value += '😊';
+            input.focus();
+        }
+
+        // 初始化應用
+        document.addEventListener('DOMContentLoaded', () => {
+            window.chatApp = new ChatApp();
+        });
+    </script>
+</body>
+</html>

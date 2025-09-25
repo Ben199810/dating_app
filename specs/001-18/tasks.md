@@ -129,10 +129,10 @@
 
 ### 前端頁面
 
-- [ ] T049 [P] 註冊頁面更新（年齡驗證）在 static/html/register.html
-- [ ] T050 [P] 個人檔案頁面在 static/html/profile.html
-- [ ] T051 [P] 配對頁面在 static/html/matching.html
-- [ ] T052 [P] 聊天室頁面更新在 static/html/chat.html
+- [x] T049 [P] 註冊頁面更新（年齡驗證）在 static/html/register.html
+- [x] T050 [P] 個人檔案頁面在 static/html/profile.html
+- [x] T051 [P] 配對頁面在 static/html/matching.html
+- [x] T052 [P] 聊天室頁面更新在 static/html/chat.html
 
 ### 前端 JavaScript
 
