@@ -102,18 +102,18 @@
 
 ### MySQL 實作
 
-- [ ] T031 [P] MySQL User 實作在 infrastructure/mysql/user_repository.go
-- [ ] T032 [P] MySQL Match 實作在 infrastructure/mysql/match_repository.go
-- [ ] T033 [P] MySQL Chat 實作在 infrastructure/mysql/chat_repository.go
-- [ ] T034 [P] MySQL Report 實作在 infrastructure/mysql/report_repository.go
-- [ ] T035 [P] 實體映射器更新在 infrastructure/mysql/entity_mapper.go
+- [x] T031 [P] MySQL User 實作在 infrastructure/mysql/user_repository.go
+- [x] T032 [P] MySQL Match 實作在 infrastructure/mysql/match_repository.go
+- [x] T033 [P] MySQL Chat 實作在 infrastructure/mysql/chat_repository.go
+- [x] T034 [P] MySQL Report 實作在 infrastructure/mysql/report_repository.go
+- [x] T035 [P] 實體映射器更新在 infrastructure/mysql/entity_mapper.go
 
 ### 領域服務
 
-- [ ] T036 [P] UserService（註冊、認證）在 domain/usecase/user_service.go
-- [ ] T037 [P] MatchingService（配對演算法）在 domain/usecase/matching_service.go
-- [ ] T038 [P] ChatService（訊息處理）在 domain/usecase/chat_service.go
-- [ ] T039 [P] ReportService（檢舉處理）在 domain/usecase/report_service.go
+- [x] T036 [P] UserService（註冊、認證）在 domain/usecase/user_service.go
+- [x] T037 [P] MatchingService（配對演算法）在 domain/usecase/matching_service.go
+- [x] T038 [P] ChatService（訊息處理）在 domain/usecase/chat_service.go
+- [x] T039 [P] ReportService（檢舉處理）在 domain/usecase/report_service.go
 
 ### API 端點實作
 
