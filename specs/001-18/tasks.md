@@ -136,10 +136,10 @@
 
 ### 前端 JavaScript
 
-- [ ] T053 [P] 註冊表單驗證在 static/js/register.js
-- [ ] T054 [P] 個人檔案管理在 static/js/profile.js
-- [ ] T055 [P] 配對介面在 static/js/matching.js
-- [ ] T056 聊天 WebSocket 更新在 static/js/chat.js
+- [x] T053 [P] 註冊表單驗證在 static/js/register.js
+- [x] T054 [P] 個人檔案管理在 static/js/profile.js
+- [x] T055 [P] 配對介面在 static/js/matching.js
+- [x] T056 聊天 WebSocket 更新在 static/js/chat.js
 
 ## Phase 3.4: 整合
 
