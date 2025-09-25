@@ -117,22 +117,22 @@
 
 ### API 端點實作
 
-- [ ] T040 POST /api/auth/register 處理器在 server/handler/auth_handler.go
-- [ ] T041 POST /api/auth/login 處理器在 server/handler/auth_handler.go
-- [ ] T042 GET /users/profile 處理器在 server/handler/user_handler.go
-- [ ] T043 PUT /users/profile 處理器在 server/handler/user_handler.go
-- [ ] T044 POST /users/photos 處理器在 server/handler/user_handler.go
-- [ ] T045 GET /matching/potential 處理器在 server/handler/matching_handler.go
-- [ ] T046 POST /matching/swipe 處理器在 server/handler/matching_handler.go
-- [ ] T047 GET /chat/matches 處理器在 server/handler/chat_handler.go
-- [ ] T048 POST /chat/messages 處理器在 server/handler/chat_handler.go
+- [x] T040 POST /api/auth/register 處理器在 server/handler/auth_handler.go
+- [x] T041 POST /api/auth/login 處理器在 server/handler/auth_handler.go
+- [x] T042 GET /users/profile 處理器在 server/handler/user_handler.go
+- [x] T043 PUT /users/profile 處理器在 server/handler/user_handler.go
+- [x] T044 POST /users/photos 處理器在 server/handler/user_handler.go
+- [x] T045 GET /matching/potential 處理器在 server/handler/matching_handler.go
+- [x] T046 POST /matching/swipe 處理器在 server/handler/matching_handler.go
+- [x] T047 GET /chat/matches 處理器在 server/handler/chat_handler.go
+- [x] T048 POST /chat/messages 處理器在 server/handler/chat_handler.go
 
 ### 前端頁面
 
 - [ ] T049 [P] 註冊頁面更新（年齡驗證）在 static/html/register.html
 - [ ] T050 [P] 個人檔案頁面在 static/html/profile.html
 - [ ] T051 [P] 配對頁面在 static/html/matching.html
-- [ ] T052 [P] 聊天室頁面更新在 static/html/chat_websocket.html
+- [ ] T052 [P] 聊天室頁面更新在 static/html/chat.html
 
 ### 前端 JavaScript
 
