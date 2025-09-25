@@ -95,10 +95,10 @@
 
 ### 儲存庫介面
 
-- [ ] T027 [P] UserRepository 介面在 domain/repository/user_repository.go
-- [ ] T028 [P] MatchRepository 介面在 domain/repository/match_repository.go
-- [ ] T029 [P] ChatRepository 介面在 domain/repository/chat_repository.go
-- [ ] T030 [P] ReportRepository 介面在 domain/repository/report_repository.go
+- [x] T027 [P] UserRepository 介面在 domain/repository/user_repository.go
+- [x] T028 [P] MatchRepository 介面在 domain/repository/match_repository.go
+- [x] T029 [P] ChatRepository 介面在 domain/repository/chat_repository.go
+- [x] T030 [P] ReportRepository 介面在 domain/repository/report_repository.go
 
 ### MySQL 實作
 
