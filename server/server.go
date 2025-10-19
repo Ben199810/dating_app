@@ -295,6 +295,11 @@ func (s *Server) SetupRoutes() {
 	s.engine.Static("/static", s.config.StaticPath)
 	s.engine.Static("/uploads", s.config.UploadPath)
 
+	// 首頁路由 - 重導向到 static/index.html
+	s.engine.GET("/", func(c *gin.Context) {
+		c.Redirect(http.StatusMovedPermanently, "/static/index.html")
+	})
+
 	// 健康檢查端點
 	s.engine.GET("/health", s.healthCheckHandler)
 	s.engine.GET("/api/health", s.apiHealthCheckHandler)
