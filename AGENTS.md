@@ -125,8 +125,13 @@ docker image prune -a
 
 應用程式使用 YAML 配置檔案管理不同環境：
 
-- **開發環境**: `config/development.yaml`
-- **生產環境**: `config/production.yaml` (Docker 環境使用)
+本機開發環境會對應以下配置檔案：
+
+- **開發環境**: `config/development.docker.yaml`
+
+### 雲端管理平台會對應以下兩個環境配置檔案
+
+- **生產環境**: `config/production.yaml`
 - **測試環境**: `config/test.yaml`
 
 Docker 環境預設使用 `production.yaml` 配置，可以通過修改 `docker-compose.yaml` 中的 `APP_ENV` 環境變數來變更。
