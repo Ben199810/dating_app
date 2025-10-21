@@ -67,7 +67,7 @@ docker compose -f build/docker-compose.yaml down -v
 # 重啟特定服務
 docker compose -f build/docker-compose.yaml restart app
 
-# 關閉本機開發環境後，清除已無使用的 image 和 volume 釋放本機腦容量
+# 關閉本機開發環境後，清除已無使用的 image 和 volume 釋放本機電腦磁碟空間
 docker system prune -a --volumes
 docker image prune -a
 ```
