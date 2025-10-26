@@ -5,7 +5,6 @@
 ```bash
 # 檢查 Docker 狀態
 docker info
-
 # 如果 Docker 未啟動，請開啟 Docker Desktop
 open /Applications/Docker.app
 ```
@@ -15,7 +14,6 @@ open /Applications/Docker.app
 ```bash
 # 編譯所有服務的映像檔
 docker compose -f build/docker-compose.yaml build
-
 # 強制重新編譯（不使用快取）
 docker compose -f build/docker-compose.yaml build --no-cache
 ```
@@ -25,7 +23,6 @@ docker compose -f build/docker-compose.yaml build --no-cache
 ```bash
 # 在背景啟動所有服務
 docker compose -f build/docker-compose.yaml up -d
-
 # 或者在前台啟動（可以看到即時日誌）
 docker compose -f build/docker-compose.yaml up
 ```
@@ -40,17 +37,13 @@ docker compose -f build/docker-compose.yaml up
 | **MySQL 資料庫** | 3306 | 資料庫服務 |
 | **phpMyAdmin** | 8081 | 資料庫管理介面 |
 
-## 🔧 常用指令
-
 ## 檢查服務狀態
 
 ```bash
 # 查看運行中的容器
 docker compose -f build/docker-compose.yaml ps
-
 # 查看應用程式日誌
 docker compose -f build/docker-compose.yaml logs app
-
 # 查看所有服務日誌
 docker compose -f build/docker-compose.yaml logs
 ```
@@ -60,16 +53,12 @@ docker compose -f build/docker-compose.yaml logs
 ```bash
 # 停止所有服務
 docker compose -f build/docker-compose.yaml down
-
 # 停止並移除所有資料（包括資料庫）
 docker compose -f build/docker-compose.yaml down -v
-
 # 重啟特定服務
 docker compose -f build/docker-compose.yaml restart app
-
-# 關閉本機開發環境後，清除已無使用的 image 和 volume 釋放本機電腦磁碟空間
-docker system prune -a --volumes
-docker image prune -a
+# 關閉本機開發環境後，清除因為 build 產生的 none 映像檔
+docker image prune
 ```
 
 ## 🌐 存取應用程式
@@ -87,54 +76,52 @@ docker image prune -a
 
 1. **Docker daemon 連線錯誤**
 
-   ```bash
-   # 確保 Docker Desktop 正在運行
-   docker info
-   ```
+    ```bash
+    # 確保 Docker Desktop 正在運行
+    docker info
+    ```
 
 2. **端口已被占用**
 
-   ```bash
-   # 檢查端口使用情況
-   lsof -i :8080
-   lsof -i :3306
-   lsof -i :8081
-   # 停止占用端口的程序或修改 docker-compose.yaml 中的端口配置
-   ```
+    ```bash
+    # 檢查端口使用情況
+    lsof -i :8080
+    lsof -i :3306
+    lsof -i :8081
+    # 停止占用端口的程序或修改 docker-compose.yaml 中的端口配置
+    kill -9 <PID>
+    ```
 
 3. **資料庫連線失敗**
 
-   ```bash
-   # 檢查 MySQL 容器是否健康
-   docker compose -f build/docker-compose.yaml ps
-   
-   # 查看 MySQL 日誌
-   docker compose -f build/docker-compose.yaml logs mysql
-   ```
+    ```bash
+    # 檢查 MySQL 容器是否健康
+    docker compose -f build/docker-compose.yaml ps
+    # 查看 MySQL 日誌
+    docker compose -f build/docker-compose.yaml logs mysql
+    ```
 
 4. **程式碼變更未生效**
 
-   ```bash
-   # 重新編譯並啟動
-   docker compose -f build/docker-compose.yaml down
-   docker compose -f build/docker-compose.yaml build --no-cache
-   docker compose -f build/docker-compose.yaml up -d
-   ```
+    ```bash
+    # 重新編譯並啟動
+    docker compose -f build/docker-compose.yaml down
+    docker compose -f build/docker-compose.yaml build --no-cache
+    docker compose -f build/docker-compose.yaml up -d
+    ```
 
 ## ⚙️ 環境配置
 
 應用程式使用 YAML 配置檔案管理不同環境：
 
-本機開發環境會對應以下配置檔案：
+### 本機開發環境會對應以下配置檔案
 
 - **開發環境**: `config/development.docker.yaml`
 
-### 雲端管理平台會對應以下兩個環境配置檔案
+### 雲端平台會對應以下兩個環境配置檔案
 
 - **生產環境**: `config/production.yaml`
 - **測試環境**: `config/test.yaml`
-
-Docker 環境預設使用 `production.yaml` 配置，可以通過修改 `docker-compose.yaml` 中的 `APP_ENV` 環境變數來變更。
 
 ## 📝 開發流程
 
