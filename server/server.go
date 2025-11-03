@@ -295,9 +295,9 @@ func (s *Server) SetupRoutes() {
 	s.engine.Static("/static", s.config.StaticPath)
 	s.engine.Static("/uploads", s.config.UploadPath)
 
-	// 首頁路由 - 重導向到 static/index.html
+	// 首頁路由 - 直接提供 index.html 內容，保持 URL 為 /
 	s.engine.GET("/", func(c *gin.Context) {
-		c.Redirect(http.StatusMovedPermanently, "/static/index.html")
+		c.File(s.config.StaticPath + "/index.html")
 	})
 
 	// 健康檢查端點
